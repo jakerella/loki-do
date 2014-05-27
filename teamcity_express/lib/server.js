@@ -2,6 +2,7 @@ var Express = require('express'),
     _ = require('underscore'),
     messenger = require('messenger'),
     fs = require('fs'),
+    url = require('url'),
     path = require('path'),
     request = require('request'),
     connect = require('connect'),
@@ -28,7 +29,7 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
         this._servers = {};
         this._primaryExpressPort = 80; // 80 in production
         this._statServerPort = 8080; // 8080 in production
-        this._root_domain = 'teamcity.ap2.us'; // teamcity.ap2.us in production
+        this._root_domain = 'primary.site'; // teamcity.ap2.us in production
         this._initServer();
         this._initStatServer();
         this._initMessenger();
@@ -69,14 +70,60 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
                 if (!stat.isFile()) {
                     self._log('Virtual host package is not a file: ' + server['package']);
                     return;
-                } else {
-                    var entry = {
-                        'subdomain': server.subdomain,
-                        'directories': server.directories
-                    };
-                    data.push(entry);
-                    self._server.use(connect.vhost(server.subdomain + '.' + self._root_domain, server.express));
                 }
+
+                var entry = {
+                    'subdomain': server.subdomain,
+                    'directories': server.directories
+                };
+                data.push(entry);
+
+                self._server.use(function(req, res, next) {
+                    if (!req.headers || !req.headers.host) {
+                        return res.send(401);
+                    }
+                    var hostname = ( req.headers.host.match(/:/g) ) ? req.headers.host.slice( 0, req.headers.host.indexOf(":") ) : req.headers.host
+                    if (!hostname) {
+                        return res.send(401);
+                    }
+                    var tmp = hostname.split('.');
+                    var subdomain = tmp.shift();
+                    var server = self._getServerBySubdomain(subdomain);
+                    if (!server) {
+                        return res.send(401);
+                    }
+
+                    var username = server.username;
+                    var password = server.password;
+
+                    if (username && password) {
+                        // self._log('Checking auth for incoming request...');
+                        var auth = req.get('authorization');
+                        // self._log('auth', auth);
+                        if (!auth) {
+                            // self._log('Authorization header was not present');
+                            res.statusCode = 401;
+                            res.setHeader("WWW-Authenticate", "Basic realm=\"Authorization Required\"");
+                            res.end("Authorization Required");
+                        } else {
+                            var credentials = new Buffer(auth.split(" ").pop(), "base64").toString("ascii").split(":");
+                            // self._log('Credentials: ', credentials);
+                            if (credentials[0] === username && credentials[1] === password) {
+                                // self._log('Auth check passed');
+                                next();
+                            } else {
+                                // self._log('Auth check failed');
+                                res.status(403).send("Access Denied (incorrect credentials)");
+                            }
+                        }
+                    } else {
+                        next();
+                    }
+
+                });
+
+                self._server.use(connect.vhost(server.subdomain + '.' + self._root_domain, server.express));
+
             }, self);
             self._log('Initializing web proxy for servers:', data);
             self._server = self._server.listen(self._primaryExpressPort);
@@ -94,6 +141,16 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
         } else {
             launch();
         }
+    },
+
+    /**
+     * @private
+     */
+    '_getServerBySubdomain': function(subdomain) {
+        if (!this._servers[subdomain]) {
+            return;
+        }
+        return this._servers[subdomain];
     },
 
     /**
@@ -270,7 +327,7 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
      * @private
      */
     '_loadProjectServer': function(packagePath, directories, subdomain, username, password) {
-        this._log('Initializing project server', packagePath, directories, subdomain);
+        this._log('Initializing project server', packagePath, directories, subdomain, username, password);
         var self = this;
         var launch = function() {
             self._servers[subdomain] = {
@@ -285,23 +342,6 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
             _.each(directories, function(v, k) {
                 self._servers[subdomain].express.use(k, Express.static(v));
             }, self);
-            if (username && password) {
-                self._servers[subdomain].use(function(req, res, next) {
-                    var auth = req.get('authorization');
-                    if (!auth) {
-                        res.set("WWW-Authenticate", "Basic realm=\"Authorization Required\"");
-                        return res.status(401).send("Authorization Required");
-                    } else {
-                        var credentials = new Buffer(auth.split(" ").pop(), "base64").toString("ascii").split(":");
-                        if (credentials[0] === "username" && credentials[1] === "password") {
-                            next();
-                        } else {
-                            res.status(403).send("Access Denied (incorrect credentials)");
-                            next('Incorrect credentials.');
-                        }
-                    }
-                });
-            }
             self._servers[subdomain].express = self._servers[subdomain].express.listen(self._servers[subdomain].port);
             self._initServer();
         };
