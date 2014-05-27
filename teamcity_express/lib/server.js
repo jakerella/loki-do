@@ -29,7 +29,7 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
         this._servers = {};
         this._primaryExpressPort = 80; // 80 in production
         this._statServerPort = 8080; // 8080 in production
-        this._root_domain = 'primary.site'; // teamcity.ap2.us in production
+        this._root_domain = 'teamcity.ap2.us'; // teamcity.ap2.us in production
         this._initServer();
         this._initStatServer();
         this._initMessenger();
