@@ -3,6 +3,8 @@ var Express = require('express'),
     messenger = require('messenger'),
     fs = require('fs'),
     url = require('url'),
+    nodemailer = require('nodemailer'),
+    shell = require('shelljs'),
     path = require('path'),
     request = require('request'),
     connect = require('connect'),
@@ -316,7 +318,7 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
                 if (err) {
                     return;
                 }
-                self._loadProjectServer(packagePath, data.teamcity.directories, subdomain, data.teamcity.username || null, data.teamcity.password || null);
+                self._loadProjectServer(packagePath, data.teamcity.directories, subdomain, data.teamcity.username || null, data.teamcity.password || null, data.teamcity.run_tests || false, data.teamcity.test_recipients || []);
             });
         });
     },
@@ -326,8 +328,8 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
      *
      * @private
      */
-    '_loadProjectServer': function(packagePath, directories, subdomain, username, password) {
-        this._log('Initializing project server', packagePath, directories, subdomain, username, password);
+    '_loadProjectServer': function(packagePath, directories, subdomain, username, password, runTests, recipients) {
+        this._log('Initializing project server', packagePath, directories, subdomain, username, password, runTests);
         var self = this;
         var launch = function() {
             self._servers[subdomain] = {
@@ -344,6 +346,25 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
             }, self);
             self._servers[subdomain].express = self._servers[subdomain].express.listen(self._servers[subdomain].port);
             self._initServer();
+            if (runTests) {
+                var projectDir = path.dirname(packagePath);
+                var testCommand = 'cd ' + projectDir + '; grunt teamcity_test';
+                self._log('Running TeamCity test suite: ' + testCommand);
+                shell.exec(testCommand, {
+                    'async': true,
+                    'silent': true
+                }, function(code, output) {
+                    if (code !== 0) {
+                        self._log('TeamCity test suite failed with exit code: ' + code);
+                        self._sendEmail(recipients, 'TeamCity test suite failed with exit code: ' + code);
+                    } else {
+                        self._log('TeamCity test suite returned with data:', {
+                            'result': output
+                        });
+                        self._sendEmail(recipients, output);
+                    }
+                });
+            }
         };
         if (this._servers[subdomain]) {
             this._killServer(subdomain, function() {
@@ -352,6 +373,55 @@ _.extend(Server.prototype, /** @lends Server.prototype */ {
         } else {
             launch();
         }
+    },
+
+    /**
+     * @private
+     */
+    '_sendEmail': function(recipients, message) {
+        var tmp = message.split("##========##");
+        if (!tmp[1]) {
+            return;
+        }
+        message = tmp[1];
+        var self = this;
+        if (!_.isArray(recipients)) {
+            recipients = [recipients];
+        }
+        // create reusable transport method (opens pool of SMTP connections)
+        var smtpTransport = nodemailer.createTransport("SMTP",{
+            service: "Gmail",
+            "auth": {
+                "user": "smtp@appendto.com",
+                "pass": "qAwiV8CuLgps"
+            },
+            "host": "smtp.gmail.com",
+            "secureConnection": true,
+            "port": 465,
+            "maxConnections": 5,
+            "maxMessages": null
+        });
+
+        // setup e-mail data with unicode symbols
+        var mailOptions = {
+            from: "appendTo TeamCity <smtp@appendto.com>", // sender address
+            to: recipients.join(', '),
+            subject: "TeamCity Test Results",
+            text: message
+            // html: "<b>Hello world ✔</b>" // html body
+        }
+
+        // send mail with defined transport object
+        smtpTransport.sendMail(mailOptions, function(error, response){
+            if(error){
+                self._log("Email failed: " + error);
+            }else{
+                self._log("Message sent: " + response.message);
+            }
+
+            // if you don't want to use this transport object anymore, uncomment following line
+            smtpTransport.close(); // shut down the connection pool, no more messages
+        });
     },
 
     /**
