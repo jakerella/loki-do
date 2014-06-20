@@ -1,0 +1,12 @@
+{
+    "hostname": "a2staging.com",
+    "digital_ocean": {
+        "client_id": "746a282ad0d5038337a3ce6f88ca5aef",
+        "api_key": "cd83358d5afea55d50256abfd59ac7f6",
+        "ssh_key_id": "133215",
+        "public_ssh_key": "/tmp/id_rsa_a2_digital_ocean.pub",
+        "private_ssh_key": "/tmp/id_rsa_a2_digital_ocean"
+    },
+    "scripts_path": "/opt/teamcity-a2/tc/tmp/scripts",
+    "log_file": "/tmp/tc.log"
+}

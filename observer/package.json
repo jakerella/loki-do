@@ -1,0 +1,21 @@
+{
+  "name": "tc",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "glob": "^4.0.2",
+    "messenger": "0.0.9",
+    "microevent": "~1.0.0",
+    "motorboat": "0.1.2",
+    "nconf": "~0.6.9",
+    "q": "~1.0.1",
+    "underscore": "~1.6.0",
+    "winston": "~0.7.3"
+  }
+}
