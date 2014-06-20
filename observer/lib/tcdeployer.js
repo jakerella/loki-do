@@ -266,7 +266,7 @@ _.extend(TCDeployer.prototype, {
         var d = Q.defer(),
             self = this;
         var cmd1 = 'cd /opt/app; chmod +x provision.sh; ./provision.sh';
-        var cmd2 = 'cd /opt/app; forever stop index.js; forever start index.js';
+        var cmd2 = 'cd /opt/app; ./stop.sh; start.sh';
         this.motorboat.runInstanceCommand(box_id, cmd1, function(err, result) {
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
                 return d.resolve();
@@ -279,7 +279,7 @@ _.extend(TCDeployer.prototype, {
         var d = Q.defer(),
             self = this;
         var cmd1 = 'cd /opt/app; chmod +x update.sh; ./update.sh';
-        var cmd2 = 'cd /opt/app; forever stop index.js; forever start index.js';
+        var cmd2 = 'cd /opt/app; ./stop.sh, start.sh';
         this.motorboat.runInstanceCommand(box_id, cmd1, function(err, result) {
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
                 return d.resolve();
