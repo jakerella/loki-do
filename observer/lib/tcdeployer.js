@@ -74,7 +74,7 @@ _.extend(TCDeployer.prototype, {
                             self.trigger('log', 'info', 'Successfully copied build.', {
                                 'options': options
                             });
-                            self._startApp(droplet.id);
+                            self._startApp(results[0].id);
                         }, function(err) {
                             self.trigger('log', 'info', 'Failed to copy build: ' + err, {
                                 'options': options
@@ -278,10 +278,18 @@ _.extend(TCDeployer.prototype, {
     '_startApp': function(box_id) {
         var d = Q.defer(),
             self = this;
-        var cmd1 = 'cd /opt/app; chmod +x provision.sh; ./provision.sh';
-        var cmd2 = 'cd /opt/app; ./stop.sh; start.sh';
+        var cmd1 = 'cd /opt/app; chmod +x ./provision.sh; ./provision.sh';
+        var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; start.sh > /dev/null &';
+        console.log('...', cmd1, cmd2);
+        self.trigger('log', 'info', 'Starting app(1)', {
+            'cmd1': cmd1,
+            'cmd2': cmd2
+        });
         this.motorboat.runInstanceCommand(box_id, cmd1, function(err, result) {
+            self.trigger('log', 'result(1): ' + result);
+            self.trigger('log', 'info', 'Starting app(2): ' + cmd2);
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
+                self.trigger('log', 'result(2): ' + result);
                 return d.resolve();
             });
         });
@@ -291,8 +299,8 @@ _.extend(TCDeployer.prototype, {
     '_restartApp': function(box_id) {
         var d = Q.defer(),
             self = this;
-        var cmd1 = 'cd /opt/app; chmod +x update.sh; ./update.sh';
-        var cmd2 = 'cd /opt/app; ./stop.sh, start.sh';
+        var cmd1 = 'cd /opt/app; chmod +x ./update.sh; ./update.sh';
+        var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; start.sh > /dev/null &';
         this.motorboat.runInstanceCommand(box_id, cmd1, function(err, result) {
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
                 return d.resolve();
