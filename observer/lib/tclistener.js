@@ -63,9 +63,6 @@ _.extend(TCListener.prototype, {
         }
         this._readPackage(packagePath).then(function(data) {
             data.teamcity = data.teamcity || {};
-            if (_.isEmpty(data.teamcity)) {
-                return;
-            }
             data.teamcity.name = data.name || null;
             if (!data.teamcity.name) {
                 return;
