@@ -174,7 +174,7 @@ _.extend(TCDeployer.prototype, {
         var self = this;
         var d = Q.defer();
         var register = function(droplet) {
-            self.motorboat.domainRecordNew('328048', 'A', droplet.ip_address, {
+            self.motorboat.domainRecordNew('328048', 'A', droplet.private_ip_address, {
                 'name': options.subdomain
             }, function(err, result) {
                 if (err) {
@@ -192,7 +192,7 @@ _.extend(TCDeployer.prototype, {
                     return d.reject(err);
                 }
                 var record = _.findWhere(results, {
-                    'data': droplet.ip_address
+                    'data': droplet.private_ip_address
                 });
                 if (record) {
                     self.motorboat.domainRecordDestroy('328048', record.id, function(err) {
