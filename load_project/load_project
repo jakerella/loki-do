@@ -24,7 +24,7 @@ if (!subdomain) {
 
 setTimeout(function() {
     console.log('Notifying Express');
-    client.request('load_project', {
+    client.request('deploy', {
         'project_path': projectPath,
         'subdomain': subdomain
     }, function(data) {
