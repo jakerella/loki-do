@@ -7,6 +7,8 @@ var _ = require('underscore'),
     nconf = require('nconf'),
     MicroEvent = require('microevent');
 
+require('shelljs/global');
+
 var TCDeployer = function() {
     this.init.apply(this, arguments);
 };
@@ -40,6 +42,7 @@ _.extend(TCDeployer.prototype, {
             'username': null,
             'password': null
         });
+        this._createDefaultScripts(dir);
         this._getDroplet(options.subdomain).then(function(droplet) {
             if (droplet) {
                 self._updateDroplet(dir, options, droplet).then(function(results) {
@@ -94,6 +97,16 @@ _.extend(TCDeployer.prototype, {
                 'options': options
             });
         });
+    },
+
+    /**
+     * Adds `start.sh` and `stop.sh` scripts to the project, if they don't already exist.
+     *
+     * @private
+     */
+    '_createDefaultScripts': function(dir) {
+        exec('touch ' + dir + '/start.sh');
+        exec('touch ' + dir + '/stop.sh');
     },
 
     '_getDroplet': function(name) {
