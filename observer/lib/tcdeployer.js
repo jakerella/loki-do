@@ -330,11 +330,13 @@ _.extend(TCDeployer.prototype, {
 		        self.trigger('log', 'error', err.toString());
 		        return d.reject(err);
 	        }
+	        self.trigger('log', 'info', result);
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
 	            if (err) {
 		            self.trigger('log', 'error', err.toString());
 		            return d.reject(err);
 	            }
+	            self.trigger('log', 'info', result);
                 return d.resolve();
             });
         });
