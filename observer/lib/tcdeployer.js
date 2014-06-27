@@ -174,7 +174,7 @@ _.extend(TCDeployer.prototype, {
         var self = this;
         var d = Q.defer();
         var register = function(droplet) {
-            self.motorboat.domainRecordNew('328048', 'A', droplet.private_ip_address, {
+            self.motorboat.domainRecordNew('328048', 'A', droplet.ip_address, {
                 'name': options.subdomain
             }, function(err, result) {
                 if (err) {
@@ -279,7 +279,7 @@ _.extend(TCDeployer.prototype, {
         var d = Q.defer(),
             self = this;
         var cmd1 = 'cd /opt/app; chmod +x ./provision.sh; ./provision.sh';
-        var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; start.sh > /dev/null &';
+        var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; ./start.sh > /dev/null &';
         console.log('...', cmd1, cmd2);
         self.trigger('log', 'info', 'Starting app(1)', {
             'cmd1': cmd1,
@@ -300,7 +300,7 @@ _.extend(TCDeployer.prototype, {
         var d = Q.defer(),
             self = this;
         var cmd1 = 'cd /opt/app; chmod +x ./update.sh; ./update.sh';
-        var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; start.sh > /dev/null &';
+        var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; ./start.sh > /dev/null &';
         this.motorboat.runInstanceCommand(box_id, cmd1, function(err, result) {
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
                 return d.resolve();
