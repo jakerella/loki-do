@@ -28,7 +28,8 @@ _.extend(TCDeployer.prototype, {
             'scripts_path': nconf.get('scripts_path'),
             'ssh_key_id': nconf.get('digital_ocean:ssh_key_id'),
             'public_ssh_key': nconf.get('digital_ocean:public_ssh_key'),
-            'private_ssh_key': nconf.get('digital_ocean:private_ssh_key')
+            'private_ssh_key': nconf.get('digital_ocean:private_ssh_key'),
+	        'enable_logging': nconf.get('digital_ocean:enable_logging')
         });
     },
 

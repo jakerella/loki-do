@@ -5,7 +5,8 @@
         "api_key": "cd83358d5afea55d50256abfd59ac7f6",
         "ssh_key_id": "133215",
         "public_ssh_key": "/root/.ssh/id_rsa_a2_digital_ocean.pub",
-        "private_ssh_key": "/root/.ssh/id_rsa_a2_digital_ocean"
+        "private_ssh_key": "/root/.ssh/id_rsa_a2_digital_ocean",
+	    "enable_logging": true
     },
     "scripts_path": "/opt/teamcity-scripts/observer/tmp/scripts",
     "log_file": "/tmp/tc.log"
