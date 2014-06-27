@@ -16,10 +16,12 @@ var TCDeployer = function() {
 _.extend(TCDeployer.prototype, {
 
     'init': function() {
+	    this.trigger('log', 'info', '>>> init');
         this._initMotorboat();
     },
 
     '_initMotorboat': function() {
+	    this.trigger('log', 'info', '>>> _initMotorboat');
         this.motorboat = new Motorboat({
             'client_id': nconf.get('digital_ocean:client_id'),
             'api_key': nconf.get('digital_ocean:api_key'),
@@ -37,6 +39,7 @@ _.extend(TCDeployer.prototype, {
      * @param {Object} options - Teamcity options object from the project's `package.json` file
      */
     'deploy': function(dir, options) {
+	    this.trigger('log', 'info', '>>> deploy');
         var self = this;
         _.defaults(options, {
             'username': null,
@@ -105,15 +108,19 @@ _.extend(TCDeployer.prototype, {
      * @private
      */
     '_createDefaultScripts': function(dir) {
+	    this.trigger('log', 'info', '>>> _createDefaultScripts');
         exec('touch ' + dir + '/start.sh');
         exec('touch ' + dir + '/stop.sh');
     },
 
     '_getDroplet': function(name) {
+	    this.trigger('log', 'info', '>>> _getDroplet');
         name = name + '.' + nconf.get('hostname');
         var d = Q.defer();
+	    var self = this;
         this.motorboat.getDropletByName(name, function(err, droplet) {
             if (err) {
+	            self.trigger('log', 'error', err.toString());
                 return d.reject(err);
             }
             d.resolve(droplet);
@@ -122,6 +129,7 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_updateDroplet': function(dir, options, droplet) {
+	    this.trigger('log', 'info', '>>> _updateDroplet');
         var d = Q.defer(),
             self = this;
         this.trigger('log', 'info', 'Updating existing droplet', {
@@ -138,6 +146,7 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_createDroplet': function(dir, options) {
+	    this.trigger('log', 'info', '>>> _createDroplet');
         var d = Q.defer();
         this.trigger('log', 'info', 'Creating new droplet', {
             'dir': dir,
@@ -153,6 +162,7 @@ _.extend(TCDeployer.prototype, {
         if (fs.existsSync(buildScript)) {
             scripts.push(buildScript);
         }
+	    var self = this;
         this.motorboat.provision({
             'name': options.subdomain + '.' + nconf.get('hostname'),
             'size': '66',
@@ -163,6 +173,7 @@ _.extend(TCDeployer.prototype, {
             'scripts': scripts
         }, function(err, results) {
             if (err) {
+	            self.trigger('log', 'error', err.toString());
                 return d.reject(err);
             }
             d.resolve(results);
@@ -171,6 +182,7 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_registerDomain': function(options, box_id) {
+	    this.trigger('log', 'info', '>>> _registerDomain');
         var self = this;
         var d = Q.defer();
         var register = function(droplet) {
@@ -178,6 +190,7 @@ _.extend(TCDeployer.prototype, {
                 'name': options.subdomain
             }, function(err, result) {
                 if (err) {
+	                self.trigger('log', 'error', err.toString());
                     return d.reject(err);
                 }
                 d.resolve();
@@ -185,10 +198,12 @@ _.extend(TCDeployer.prototype, {
         };
         this.motorboat.dropletGet(box_id, function(err, droplet) {
             if (err) {
+	            self.trigger('log', 'error', err.toString());
                 return d.reject(err);
             }
             self.motorboat.domainRecordGetAll('328048', function(err, results) {
                 if (err) {
+	                self.trigger('log', 'error', err.toString());
                     return d.reject(err);
                 }
                 var record = _.findWhere(results, {
@@ -197,6 +212,7 @@ _.extend(TCDeployer.prototype, {
                 if (record) {
                     self.motorboat.domainRecordDestroy('328048', record.id, function(err) {
                         if (err) {
+	                        self.trigger('log', 'error', err.toString());
                             return d.reject(err);
                         }
                         register(droplet);
@@ -210,6 +226,7 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_copyBuild': function(box_id, dir, options) {
+	    this.trigger('log', 'info', '>>> _copyBuild');
         var self = this,
             d = Q.defer(),
             attempts = 0;
@@ -217,6 +234,7 @@ _.extend(TCDeployer.prototype, {
             attempts++;
             self.motorboat.copyFolder(box_id, dir, '/opt', function(err) {
                 if (err) {
+	                self.trigger('log', 'error', err.toString());
                     if (attempts >= 5) {
                         return d.reject(err);
                     } else {
@@ -229,6 +247,7 @@ _.extend(TCDeployer.prototype, {
                 var cmd = 'mv /opt/' + path.basename(dir) + ' /opt/app';
                 self.motorboat.runInstanceCommand(box_id, cmd, function(err) {
                     if (err) {
+	                    self.trigger('log', 'error', err.toString());
                         return d.reject(err);
                     }
                     return d.resolve();
@@ -240,10 +259,10 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_syncBuild': function(box_id, dir) {
+	    this.trigger('log', 'info', '>>> _syncBuild');
         var self = this,
             d = Q.defer(),
             attempts = 0;
-		self.trigger('log', 'info', '_syncBuild');
         var kopy = function() {
             attempts++;
 	        self.trigger('log', 'info', 'attempts ' + attempts);
@@ -264,10 +283,13 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_deleteBuild': function(box_id) {
+	    this.trigger('log', 'info', '>>> _deleteBuild');
         var d = Q.defer();
         var cmd = 'rm -rf /opt/app';
+	    var self = this;
         this.motorboat.runInstanceCommand(box_id, cmd, function(err) {
             if (err) {
+	            self.trigger('log', 'error', err.toString());
                 return d.reject(err);
             }
             return d.resolve();
@@ -276,6 +298,7 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_startApp': function(box_id) {
+	    this.trigger('log', 'info', '>>> _startApp');
         var d = Q.defer(),
             self = this;
         var cmd1 = 'cd /opt/app; chmod +x ./provision.sh; ./provision.sh';
@@ -297,6 +320,7 @@ _.extend(TCDeployer.prototype, {
     },
 
     '_restartApp': function(box_id) {
+	    this.trigger('log', 'info', '>>> _restartApp');
         var d = Q.defer(),
             self = this;
         var cmd1 = 'cd /opt/app; chmod +x ./update.sh; ./update.sh';
