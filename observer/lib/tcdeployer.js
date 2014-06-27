@@ -243,21 +243,17 @@ _.extend(TCDeployer.prototype, {
         var self = this,
             d = Q.defer(),
             attempts = 0;
-	self.trigger('log', 'info', '_syncBuild');
+		self.trigger('log', 'info', '_syncBuild');
         var kopy = function() {
             attempts++;
-	    self.trigger('log', 'info', 'attempts ' + attempts);
+	        self.trigger('log', 'info', 'attempts ' + attempts);
             self.motorboat.copyFolder(box_id, dir + '/', '/opt/app/', function(err) {
                 if (err) {
                     self.trigger('log', 'error', 'copyFolder: ' + err.toString());
                     if (attempts >= 5) {
                         return d.reject(err);
                     } else {
-                        //setTimeout(function() {
-                        //    kopy();
-                        //}, 120000);
-                        //return;
-			return setTimeout(kopy, 1000 * 20);
+						return setTimeout(kopy, 1000 * 60 * 2);
                     }
                 }
                 return d.resolve();
