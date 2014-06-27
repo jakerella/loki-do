@@ -326,7 +326,15 @@ _.extend(TCDeployer.prototype, {
         var cmd1 = 'cd /opt/app; chmod +x ./update.sh; ./update.sh';
         var cmd2 = 'cd /opt/app; chmod +x ./stop.sh; chmod +x ./start.sh; ./stop.sh; ./start.sh > /dev/null &';
         this.motorboat.runInstanceCommand(box_id, cmd1, function(err, result) {
+	        if (err) {
+		        self.trigger('log', 'error', err.toString());
+		        return d.reject(err);
+	        }
             self.motorboat.runInstanceCommand(box_id, cmd2, function(err, result) {
+	            if (err) {
+		            self.trigger('log', 'error', err.toString());
+		            return d.reject(err);
+	            }
                 return d.resolve();
             });
         });
