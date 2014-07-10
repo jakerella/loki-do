@@ -1,0 +1,21 @@
+{
+  "name": "teamcity-scripts",
+  "version": "0.1.0",
+  "description": "Scripts to facilitate continuous integration and deployment",
+  "main": "src/execute.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/appendto/teamcity-scripts.git"
+  },
+  "author": "Tim Ambler",
+  "contributors": [
+    "Nick Cloud",
+    "Jordan Kasper"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/appendto/teamcity-scripts/issues"
+  },
+  "homepage": "https://github.com/appendto/teamcity-scripts"
+}
