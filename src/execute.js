@@ -1,6 +1,7 @@
 
 // Dependencies
-var fs = require('fs');
+var fs = require('fs'),
+    path = require('path');
 
 var methods = {
 
@@ -13,7 +14,8 @@ var methods = {
      */
     main: function (args) {
 
-        var options = methods.parseArgsAndOptions(args);
+        var pkgFile,
+            options = methods.parseArgsAndOptions(args);
 
         // Argument audits
         if (!options.command) {
@@ -37,8 +39,13 @@ var methods = {
             throw Error('That is not a valid command');
         }
 
-        // TODO: 
-        //  audit that path and package.json exist
+        // Check the project path and package.json file
+        options.path = path.resolve(options.path);
+        pkgFile = path.join(options.path, 'package.json');
+
+        if (!fs.existsSync(pkgFile)) {
+            throw Error('There is no package.json file in that project path! (' + options.path + ')');
+        }
 
         console.log('Executing command:', JSON.stringify(options));
 
@@ -96,7 +103,7 @@ var methods = {
             "\n" +
             "  Arguments\n" +
             "    command       What to run on the remote server (see 'Commands' above)\n" +
-            "    project-path  Path to the project on the CI server (not remote server)\n" +
+            "    project-path  Path to the project on the CI server (not remote server); must have a package.json file at that location\n" +
             "\n" +
             "  Options\n" +
             "    --subdomain   The subdomain to use for the remote server deployment\n" +

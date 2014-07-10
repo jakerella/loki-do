@@ -150,7 +150,7 @@ describe('execute module', function() {
                 'node',
                 'script/path.js',
                 'deploy',
-                '../'
+                '.'
             ]);
 
             expect(result).to.be.undefined;
