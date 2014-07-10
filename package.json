@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Scripts to facilitate continuous integration and deployment",
   "main": "src/execute.js",
-  "scripts": {},
+  "scripts": {
+    "test": "make test"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/appendto/teamcity-scripts.git"
@@ -17,5 +19,10 @@
   "bugs": {
     "url": "https://github.com/appendto/teamcity-scripts/issues"
   },
-  "homepage": "https://github.com/appendto/teamcity-scripts"
+  "homepage": "https://github.com/appendto/teamcity-scripts",
+  "devDependencies": {
+    "mocha": "^1.20.1",
+    "chai": "^1.9.1",
+    "chai-spies": "^0.5.1"
+  }
 }
