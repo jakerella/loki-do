@@ -18,7 +18,7 @@ var methods = {
         // Argument audits
         if (!options.command) {
             methods.showUsage();
-            throw 'No command was specified';
+            throw Error('No command was specified');
         }
         if (options.command === '-h' || options.command === '--help') {
             methods.showUsage();
@@ -26,7 +26,7 @@ var methods = {
         }
         if (!options.path) {
             methods.showUsage();
-            throw 'No project path was specified';
+            throw Error('No project path was specified');
         }
 
         // The current deployer setup only allows for "deploy" as a valid command.
@@ -34,7 +34,7 @@ var methods = {
         // on the package.json `scripts` block.
         if (options.command !== 'deploy') {
             methods.showUsage();
-            throw 'That is not a valid command';
+            throw Error('That is not a valid command');
         }
 
         // TODO: 
@@ -59,6 +59,10 @@ var methods = {
                 command: null,
                 path: null
             };
+
+        if (!args || args.length < 3) {
+            return options;
+        }
 
         if (args[2]) {
             options.command = args[2];
@@ -108,5 +112,5 @@ var methods = {
 if (require.main === module) {
     methods.main(process.argv);
 } else {
-    module.export = methods;
+    module.exports = methods;
 }
