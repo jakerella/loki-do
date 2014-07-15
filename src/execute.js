@@ -1,7 +1,14 @@
+'use strict';
 
 // Dependencies
 var fs = require('fs'),
-    path = require('path');
+    path = require('path'),
+	fileToJSON = require('./file-to-json'),
+	SpeedBoat = require('./speedboat'),
+	deployCmd = require('./command/deploy'),
+	EOL = require('os').EOL;
+
+var IS_EXECUTING = (require.main === module);
 
 var methods = {
 
@@ -10,7 +17,7 @@ var methods = {
      * This is the main logic for the CLI script
      *
      * @param {Array} args The array of arguments passed to the CLI command
-     * @return {void}
+     * @return {Promise}
      */
     main: function (args) {
 
@@ -31,6 +38,14 @@ var methods = {
             throw Error('No project path was specified');
         }
 
+	    // Check the project path and package.json file
+	    options.path = path.resolve(options.path);
+	    pkgFile = path.join(options.path, 'package.json');
+
+	    if (!fs.existsSync(pkgFile)) {
+		    throw Error('There is no package.json file in that project path! (' + options.path + ')');
+	    }
+
         // The current deployer setup only allows for "deploy" as a valid command.
         // In the future, more complete lifecycle commands will be allowed based 
         // on the package.json `scripts` block.
@@ -39,18 +54,46 @@ var methods = {
             throw Error('That is not a valid command');
         }
 
-        // Check the project path and package.json file
-        options.path = path.resolve(options.path);
-        pkgFile = path.join(options.path, 'package.json');
+	    if (!options.doconfig) {
+		    methods.showUsage();
+		    throw new Error('cloud configuration path not specified');
+	    }
 
-        if (!fs.existsSync(pkgFile)) {
-            throw Error('There is no package.json file in that project path! (' + options.path + ')');
-        }
+	    var doConfigPath = path.resolve(__dirname, options.doconfig);
 
-        console.log('Executing command:', JSON.stringify(options));
+	    if (!fs.existsSync(doConfigPath)) {
+		    methods.showUsage();
+		    throw new Error('cloud configuration path does not exist');
+	    }
 
-        // TODO: call into the integrater
+	    console.log('Executing command:', JSON.stringify(options));
 
+		var doConfig;
+	    try {
+		    doConfig = fileToJSON(doConfigPath);
+	    } catch (e) {
+			methods.showUsage();
+		    throw new Error('cloud configuration file is not valid JSON');
+	    }
+
+	    var speedboat = new SpeedBoat({
+		    client_id: doConfig.client_id,
+		    api_key: doConfig.api_key,
+		    scripts_path: doConfig.scripts_path,
+		    ssh_key_id: doConfig.ssh_key_id,
+		    public_ssh_key: doConfig.public_ssh_key,
+		    private_ssh_key: doConfig.private_ssh_key,
+		    enable_logging: doConfig.enable_logging
+	    });
+	    var deploy = deployCmd(speedboat);
+	    var self = this;
+	    return deploy.then(function () {
+		    console.info('deployment finished');
+		    self.exit(0);
+	    }, function (err) {
+		    console.error(err);
+		    self.exit(1);
+	    });
     },
 
     /**
@@ -92,32 +135,54 @@ var methods = {
     },
 
     showUsage: function () {
-        console.log(
-            "Usage: node execute.js {command} {project-path} [--option=[value], ...]\n" +
-            "    This script is used to run commands on a deployment server. The \n" +
-            "    intent is to allow for a bridge between the CI server and the \n" +
-            "    deployment server.\n" + 
-            "\n" +
-            "  Commands\n" + 
-            "    deploy     Currently the only command, deploys project to server\n" +
-            "\n" +
-            "  Arguments\n" +
-            "    command       What to run on the remote server (see 'Commands' above)\n" +
-            "    project-path  Path to the project on the CI server (not remote server); must have a package.json file at that location\n" +
-            "\n" +
-            "  Options\n" +
-            "    --subdomain   The subdomain to use for the remote server deployment\n" +
-            "    --help        Show this usage information\n"
-        );
-    }
+        console.log([
+	        "",
+            "  USAGE: node execute.js {command} {project-path} [--option=[value], ...]",
+	        "",
+            "  This script is used to run commands on a deployment server. The ",
+            "  intent is to allow for a bridge between the CI server and the ",
+            "  deployment server.",
+            "",
+            "  Commands",
+            "    deploy     Currently the only command, deploys project to server",
+            "",
+            "  Arguments",
+            "    command       What to run on the remote server (see 'Commands' above)",
+            "    project-path  Path to the project on the CI server (not remote server);",
+	        "                  must have a package.json file at that location",
+	        "    doconfig      Path to the Digital Ocean configuration file (JSON)",
+            "",
+            "  Options",
+            "    --subdomain   The subdomain to use for the remote server deployment",
+            "    --help        Show this usage information"
+        ].join(EOL));
+    },
+
+	/**
+	 * Exists the process with the appropriate error code if
+	 * running as a CLI script.
+	 * @param {Number} errorCode
+	 */
+	exit: function (errorCode) {
+		if (IS_EXECUTING) {
+			process.exit(errorCode);
+		}
+		var e = new Error('process exited');
+		e.code = errorCode;
+		throw e;
+	}
 };
 
 
 /* ********************************************************* */
 /*     Kicks off the process if it is a CLI command call     */
 /* ********************************************************* */
-if (require.main === module) {
+if (IS_EXECUTING) {
     methods.main(process.argv);
 } else {
-    module.exports = methods;
+	module.exports = function (_deployCmd_, _fileToJSON_) {
+		deployCmd = _deployCmd_ || deployCmd;
+		fileToJSON = _fileToJSON_ || fileToJSON;
+		return methods;
+	};
 }

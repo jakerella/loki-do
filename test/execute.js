@@ -3,19 +3,51 @@
 var chai = require('chai'),
     spies = require('chai-spies'),
     expect = chai.expect,
+	Q = require('q'),
 
     // source code
-    execute = require('../src/execute.js');
+    executeFactory = require('../src/execute.js');
 
 // We need spies to see that our dependencies were called
 chai.use(spies);
 
 describe('execute module', function() {
-    var _consoleLog;
+	// deploy CMD mock
+	var deployMock;
+	var deployCmdMock = function () {
+		return deployMock();
+	};
+	// config mock
+	var configMock = {};
+	var fileToJSONMock = function () {
+		return configMock;
+	};
+	// mocked execute module
+	var execute;
+	var _consoleLog;
+
 
     beforeEach(function() {
+	    deployMock = function () {
+		    var deferred = Q.defer(),
+			    promise = deferred.promise;
+		    deferred.resolve();
+		    return promise;
+	    };
+	    configMock = {
+		    hostname: 'a2mock.com',
+		    client_id: '1234567890987654321',
+		    api_key: 'abcdefghijklmnopqrstuvwxyz',
+		    ssh_key_id: '123456',
+		    public_ssh_key: '/mock/key.pub',
+		    private_ssh_key: 'mock/key',
+		    enable_logging: true,
+		    scripts_path: '/mock/scripts',
+		    log_file: '/mock/tc.log'
+	    };
         _consoleLog = console.log;
         console.log = chai.spy(function() {}); // we don't really want to log stuff
+	    execute = executeFactory(deployCmdMock, fileToJSONMock);
     });
 
     afterEach(function() {
