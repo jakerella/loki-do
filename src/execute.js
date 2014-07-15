@@ -11,7 +11,8 @@ var fs = require('fs'),
 
 var IS_EXECUTING = (require.main === module);
 
-var methods = {
+var mod = {
+	MAX_OPTION_ERROR: 99, // the maximum error code for option/argument errors
 
 	/**
 	 * Main method which is called at the end of this file.
@@ -23,20 +24,19 @@ var methods = {
 	main: function (args) {
 
 		var pkgFile,
-			options = methods.parseArgsAndOptions(args);
+			self = this,
+			options = mod.parseArgsAndOptions(args);
 
 		// Argument audits
 		if (!options.command) {
-			methods.showUsage();
-			throw new Error('No command was specified');
+			self.exit(10, new Error('No command was specified'));
 		}
 		if (options.command === '-h' || options.command === '--help') {
-			methods.showUsage();
+			self.showUsage();
 			return;
 		}
 		if (!options.path) {
-			methods.showUsage();
-			throw new Error('No project path was specified');
+			self.exit(15, new Error('No project path was specified'));
 		}
 
 		// Check the project path and package.json file
@@ -44,28 +44,24 @@ var methods = {
 		pkgFile = path.join(options.path, 'package.json');
 
 		if (!fs.existsSync(pkgFile)) {
-			throw new Error('There is no package.json file in that project path! (' + options.path + ')');
+			self.exit(20, new Error('There is no package.json file in that project path! (' + options.path + ')'));
 		}
 
 		// The current deployer setup only allows for "deploy" as a valid command.
 		// In the future, more complete lifecycle commands will be allowed based 
 		// on the package.json `scripts` block.
 		if (options.command !== 'deploy') {
-			methods.showUsage();
-			throw new Error('That is not a valid command');
+			self.exit(25, new Error('That is not a valid command'));
 		}
 
 		if (!options.doconfig) {
-			methods.showUsage();
-			throw new Error('cloud configuration path not specified');
+			self.exit(30, new Error('cloud configuration path not specified'));
 		}
 
 		var doConfigPath = path.resolve(__dirname, options.doconfig);
 
 		if (!fs.existsSync(doConfigPath)) {
-			methods.showUsage();
-			console.log._real('path: ' + doConfigPath);
-			throw new Error('cloud configuration path does not exist');
+			self.exit(35, new Error('cloud configuration path does not exist'));
 		}
 
 		console.log('Executing command:', JSON.stringify(options));
@@ -74,8 +70,8 @@ var methods = {
 		try {
 			doConfig = fileToJSON(doConfigPath);
 		} catch (e) {
-			methods.showUsage();
-			throw new Error('cloud configuration file is not valid JSON');
+			mod.showUsage();
+			self.exit(40, new Error('cloud configuration file is not valid JSON'));
 		}
 
 		var speedboat = new SpeedBoat({
@@ -89,13 +85,12 @@ var methods = {
 		});
 		
 		var deploy = deployCmd(speedboat);
-		var self = this;
 		return deploy.then(function (data) {
 			console.log('deployment finished:');
 			console.log(data);
+			self.exit(0);
 		}, function (err) {
-			console.error(err);
-			self.exit(1);
+			self.exit(100, err);
 		});
 	},
 
@@ -103,8 +98,8 @@ var methods = {
 	 * Parses out the arguments and options from an array of strings
 	 * (most likely from process.argv, but not necessarily)
 	 * 
-	 * @param  {[type]} args [description]
-	 * @return {[type]}	  [description]
+	 * @param  {Array} args An array of arguments, either simple strings, or in --name=value format
+	 * @return {Object}	A hash of the options, included required things like "command" and "path"
 	 */
 	parseArgsAndOptions: function (args) {
 		var i, l,
@@ -137,6 +132,11 @@ var methods = {
 		return options;
 	},
 
+	/**
+	 * Shows the help information
+	 * 
+	 * @return {void}
+	 */
 	showUsage: function () {
 		console.log([
 			"",
@@ -164,15 +164,28 @@ var methods = {
 	/**
 	 * Exists the process with the appropriate error code if
 	 * running as a CLI script.
-	 * @param {Number} errorCode
+	 * 
+	 * @param {Number} errorCode The code to exit the process with
+	 * @param {String} errorOrMessage Either an Error object, or the string error message
+	 * @return {void}
 	 */
-	exit: function (errorCode) {
-		if (IS_EXECUTING) {
-			process.exit(errorCode);
+	exit: function (errorCode, errorOrMessage) {
+		if (!errorOrMessage || !(errorOrMessage instanceof Error)) {
+			errorOrMessage = new Error(errorOrMessage || 'Unexpected error');
+			errorOrMessage.code = errorCode;
 		}
-		var e = new Error('process exited');
-		e.code = errorCode;
-		throw e;
+
+		if (errorCode > 0 && errorCode <= this.MAX_OPTION_ERROR) {
+			this.showUsage();
+		}
+
+		if (IS_EXECUTING) {
+			console.error(errorOrMessage);
+			process.exit(errorCode);
+
+		} else if (errorCode !== 0) {
+			throw errorOrMessage;
+		}
 	}
 };
 
@@ -181,12 +194,12 @@ var methods = {
 /*     Kicks off the process if it is a CLI command call     */
 /* ********************************************************* */
 if (IS_EXECUTING) {
-	methods.main(process.argv);
+	mod.main(process.argv);
 } else {
 	module.exports = function (_deployCmd_, _fileToJSON_, _SpeedBoat_) {
 		deployCmd = _deployCmd_ || deployCmd;
 		fileToJSON = _fileToJSON_ || fileToJSON;
 		SpeedBoat = _SpeedBoat_ || SpeedBoat;
-		return methods;
+		return mod;
 	};
 }

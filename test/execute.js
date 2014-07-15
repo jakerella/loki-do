@@ -28,8 +28,9 @@ describe('execute module', function() {
 	};
 
 	// mocked execute module
-	var execute;
-	var _consoleLog;
+	var execute,
+		_consoleLog,
+		_consoleError;
 
 	beforeEach(function() {
 		deployMock = function () {
@@ -50,13 +51,17 @@ describe('execute module', function() {
 			log_file: '/mock/tc.log'
 		};
 		_consoleLog = console.log;
+		_consoleError = console.error;
 		console.log = chai.spy(function() {}); // we don't really want to log stuff
 		console.log._real = _consoleLog; // just in case we need it
+		console.error = chai.spy(function() {}); // we don't really want to log stuff
 		execute = executeFactory(deployCmdMock, fileToJSONMock, speedBoatMock);
 	});
 
 	afterEach(function() {
-		console.log = _consoleLog;  // let's put the log method back
+		// let's put the console methods back
+		console.log = _consoleLog;
+		console.error = _consoleError;
 	});
 
 	describe('exports', function() {
@@ -127,7 +132,7 @@ describe('execute module', function() {
 
 		beforeEach(function() {
 			_showUsage = execute.showUsage;
-			execute.showUsage = chai.spy(function() {}); // we don't really want it to do anything
+			execute.showUsage = chai.spy(function() { }); // we don't really want it to do anything
 		});
 
 		afterEach(function() {
@@ -135,7 +140,7 @@ describe('execute module', function() {
 		});
 
 		it('should fail on no input', function() {
-			expect(execute.main).to.throw(Error);
+			expect(function() { execute.main(); }).to.throw(Error);
 			expect(execute.showUsage).to.have.been.called(1);
 		});
 
@@ -190,7 +195,7 @@ describe('execute module', function() {
 				'.',
 				'--doconfig=../test/doconfig.json'
 			]);
-			
+
 			expect(result).to.be.a.object;
 			expect(result.then).to.be.a.function;
 			return result.then(
