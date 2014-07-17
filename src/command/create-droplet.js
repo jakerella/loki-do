@@ -15,11 +15,11 @@ module.exports = function (speedboat) {
 		var deferred = Q.defer(),
 			promise = deferred.promise;
 
+		// TODO: why are these scripts being added here?
 		var provisionScript = buildPath + '/provision.sh',
 			buildScript = buildPath + '/build.sh',
 			scripts = glob.sync(scriptsPath + '/*');
 
-		// TODO: why are these scripts being added here?
 		if (fs.existsSync(provisionScript)) {
 			scripts.push(provisionScript);
 		}
@@ -28,6 +28,7 @@ module.exports = function (speedboat) {
 			scripts.push(buildScript);
 		}
 
+		// TODO: make provision options configurable
 		speedboat.provision({
 			name: subdomain + '.' + hostname,
 			size: 66,
@@ -40,7 +41,7 @@ module.exports = function (speedboat) {
 			if (err) {
 				return deferred.reject(err);
 			}
-			deferred.resolve(results);
+			deferred.resolve(results[0]);
 		});
 
 		return promise;

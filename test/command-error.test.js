@@ -9,7 +9,7 @@ chai.use(spies);
 // code under test
 var CommandError = require('../src/command/command-error');
 
-describe.only('CommandError', function () {
+describe('CommandError', function () {
 	describe('ctor', function () {
 		it('should have default values', function (done) {
 			var e = new CommandError();

@@ -15,7 +15,6 @@ module.exports = function (speedboat) {
 
 		speedboat.getDropletByName(hostname, function(err, droplet) {
 			if (err) {
-				self.trigger('log', 'error', err.toString());
 				return deferred.reject(err);
 			}
 			deferred.resolve(droplet);

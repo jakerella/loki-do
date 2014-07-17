@@ -6,7 +6,8 @@ var Q = require('q'),
 	createDropletCmd = require('./create-droplet'),
 	registerDomainCmd = require('./register-domain'),
 	restartAppCmd = require('./restart-app'),
-	copyBuildCmd = require('./copy-build');
+	copyBuildCmd = require('./copy-build'),
+	startAppCmd = require('./start-app');
 
 /**
  *
@@ -20,7 +21,8 @@ module.exports = function (speedboat) {
 		createDroplet = createDropletCmd(speedboat),
 		registerDomain = registerDomainCmd(speedboat),
 		restartApp = restartAppCmd(speedboat),
-		copyBuild = copyBuildCmd(speedboat);
+		copyBuild = copyBuildCmd(speedboat),
+		startApp = startAppCmd(speedboat);
 
 	return function deploy (buildPath, scriptsPath, hostname, subdomain) {
 
@@ -31,8 +33,8 @@ module.exports = function (speedboat) {
 		}
 
 		function deployToNew() {
-			return createDroplet(buildPath, scriptsPath, hostname, subdomain).then(function (result) {
-				return result[0];
+			return createDroplet(buildPath, scriptsPath, hostname, subdomain).then(function (droplet) {
+				return droplet;
 			}).then(function (droplet) {
 				return registerDomain(droplet.id, subdomain).then(function () {
 					return droplet;

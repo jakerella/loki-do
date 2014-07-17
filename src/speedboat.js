@@ -9,9 +9,9 @@ function SpeedBoat(options) {
 SpeedBoat.prototype = Object.create(MotorBoat.prototype);
 SpeedBoat.prototype.constructor = SpeedBoat;
 
-SpeedBoat.prototype.plot = function (boxId, cmd) {
+SpeedBoat.prototype.plot = function (boxId, cmd, cb) {
 	var self = this;
-	return function (cb) {
+	var plot = function (cb) {
 		console.log('running command:', cmd);
 		self.runInstanceCommand(boxId, cmd, function (err, result) {
 			if (err) {
@@ -22,6 +22,18 @@ SpeedBoat.prototype.plot = function (boxId, cmd) {
 			cb(null, result);
 		});
 	};
+	/*
+	 * If we have a callback already, invoke the plot and
+	 * let the callback handle the result
+	 */
+	if (cb) {
+		return plot(cb);
+	}
+	/*
+	 * If we don't have a callback, the plot will be used
+	 * elsewhere (e.g., in an async.* method)
+	 */
+	return plot;
 };
 
 module.exports = SpeedBoat;

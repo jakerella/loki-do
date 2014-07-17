@@ -6,20 +6,17 @@ function Countdown(millisecondInterval) {
 	EventEmitter.call(this);
 	var self = this;
 
-	this.interval = millisecondInterval;
-	this.then = Date.now();
+	this.interval = Math.abs(millisecondInterval);
+	this.startAt = 0;
+	this.endAt = -1;
 
-	function tick() {
-		self.now = Date.now();
-		if ((self.now - self.then) >= self.interval) {
-			return self.emit('end');
-		}
-		process.nextTick(tick);
-	}
-
-	process.nextTick(function () {
+	setImmediate(function () {
+		self.startAt = Date.now();
 		self.emit('start');
-		tick();
+		setTimeout(function () {
+			self.endAt = Date.now();
+			self.emit('end');
+		}, self.interval);
 	});
 }
 
