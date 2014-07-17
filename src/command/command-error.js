@@ -1,14 +1,17 @@
 'use strict';
 
 function CommandError(message, cmd) {
-	Error.call(this, message);
+	var err = Error.apply(this, [message]);
 	this.name = 'CommandError';
 	this.cmd = cmd || '';
 	this.innerError = null;
-	Error.captureStackTrace(this, this.constructor);
+	this.message = err.message;
+	this.stack = err.stack;
+	return this;
 }
 
-CommandError.prototype = Object.create(Error.prototype);
-CommandError.prototype.constructor = CommandError;
+CommandError.prototype = Object.create(Error.prototype, {
+	constructor: { value: CommandError }
+});
 
 module.exports = CommandError;
