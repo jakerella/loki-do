@@ -86,7 +86,12 @@ var mod = {
 		});
 		
 		var deploy = deployCmd(speedboat);
-		return deploy.then(function (data) {
+		return deploy(
+            '/opt/app',
+            configObject.digital_ocean.scripts_path,
+            configObject.hostname,
+            options.subdomain
+        ).then(function (data) {
 			console.log('deployment finished:');
 			console.log(data);
 			self.exit(0);

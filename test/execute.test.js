@@ -15,7 +15,7 @@ describe('execute module', function() {
 	// deploy CMD mock
 	var deployMock;
 	var deployCmdMock = function () {
-		return deployMock();
+		return deployMock;
 	};
 	// config mock
 	var configMock = {};
