@@ -11,11 +11,12 @@ var Q = require('q'),
  */
 module.exports = function (speedboat, retryInterval) {
 
-	return function copyBuild (boxId, deployDirectory) {
-		var deferred = Q.defer(),
+	return function copyBuild (boxId) {
+		var tmpDir = 'build-temp',
+            deferred = Q.defer(),
 			promise = deferred.promise;
 
-		var MOVE_DIR_CMD = 'mv /opt/' + path.basename(deployDirectory) + ' /opt/app';
+		var MOVE_DIR_CMD = 'mv /opt/' + path.basename(tmpDir) + ' /opt/app';
 
 		var RETRY_INTERVAL = Math.abs(retryInterval || (1000 * 30));
 		var MAX_ATTEMPTS = 5;
@@ -31,7 +32,7 @@ module.exports = function (speedboat, retryInterval) {
 				errors.push(new Error('max attempts exceeded'));
 				return cb(errors);
 			}
-			speedboat.copyFolder(boxId, deployDirectory, '/opt', function (err) {
+			speedboat.copyFolder(boxId, '.', '/opt/' + path.basename(tmpDir), function (err) {
 				if (err) {
 					errors.push(err);
 					// attempt another re-try once the countdown concludes

@@ -33,7 +33,7 @@ describe('CopyBulid', function () {
 	describe('invoking the command function', function () {
 		it('should succeed if the build folder contents are copied to the droplet and moved to the app folder directory', function (done) {
 			var cmd = copyBuildCmd(speedboat, RETRY_INTERVAL);
-			cmd(droplet.id, '/mock/deploy').then(function () {
+			cmd(droplet.id).then(function () {
 				expect(speedboat.copyFolder).to.have.been.called;
 				expect(speedboat.runInstanceCommand).to.have.been.called;
 				done();
@@ -46,7 +46,7 @@ describe('CopyBulid', function () {
 			this.timeout(5000);
 			speedboat.copyFolder._rejectWith = new Error('copyFolder');
 			var cmd = copyBuildCmd(speedboat, RETRY_INTERVAL);
-			cmd(droplet.id, '/mock/deploy').then(function () {
+			cmd(droplet.id).then(function () {
 				done('deferred should not have been resolved');
 			}, function (err) {
 				expect(speedboat.copyFolder).to.have.been.called.exactly(5);
@@ -62,7 +62,7 @@ describe('CopyBulid', function () {
 		it('should fail if the move command cannot be run on the droplet', function (done) {
 			var expected = speedboat.runInstanceCommand._rejectWith = new Error('runInstanceCommand');
 			var cmd = copyBuildCmd(speedboat, RETRY_INTERVAL);
-			cmd(droplet.id, '/mock/deploy').then(function () {
+			cmd(droplet.id).then(function () {
 				done('deferred should not have been resolved');
 			}, function (actual) {
 				expect(speedboat.copyFolder).to.have.been.called.exactly(1);

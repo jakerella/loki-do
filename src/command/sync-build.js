@@ -14,13 +14,9 @@ function endsWith(str, char) {
  */
 module.exports = function (speedboat) {
 
-	return function syncBuild (boxId, buildPath) {
+	return function syncBuild (boxId) {
 		var deferred = Q.defer(),
 			promise = deferred.promise;
-
-		if (!endsWith(buildPath, '/')) {
-			buildPath += '/';
-		}
 
 		var MAX_ATTEMPTS = 5;
 		var attempts = 0;
@@ -35,7 +31,7 @@ module.exports = function (speedboat) {
 				errors.push(new Error('max attempts exceeded'));
 				return cb(errors);
 			}
-			speedboat.copyFolder(boxId, buildPath, '/opt/app/', function (err) {
+			speedboat.copyFolder(boxId, '.', '/opt/app/', function (err) {
 				if (err) {
 					errors.push(err);
 					// attempt another re-try

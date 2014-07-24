@@ -12,11 +12,11 @@ module.exports = function (speedboat) {
 
 	var syncBuild = syncBuildCmd(speedboat);
 
-	return function updateDroplet (droplet, buildPath) {
+	return function updateDroplet (droplet) {
 		var deferred = Q.defer(),
 			promise = deferred.promise;
 
-		syncBuild(droplet.id, buildPath).then(function onSyncSuccess () {
+		syncBuild(droplet.id).then(function onSyncSuccess () {
 			deferred.resolve();
 		}, function onSyncFailure (err) {
 			deferred.reject(err);

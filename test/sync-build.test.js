@@ -30,7 +30,7 @@ describe('SyncBuild', function () {
 	describe('invoking the command function', function () {
 		it('should succeed if the folder gets copied', function (done) {
 			var cmd = syncBuildCommand(speedboat);
-			cmd(droplet, '/mock/build/path').then(function () {
+			cmd(droplet).then(function () {
 				expect(speedboat.copyFolder).to.have.been.called;
 				done();
 			}, function () {
@@ -41,7 +41,7 @@ describe('SyncBuild', function () {
 		it('should fail if the folder cannot be copied', function (done) {
 			speedboat.copyFolder._rejectWith = new Error('mock error');
 			var cmd = syncBuildCommand(speedboat);
-			cmd(droplet.id, '/mock/build/path').then(function () {
+			cmd(droplet.id).then(function () {
 				done('deferred should not have been resolved');
 			}, function (err) {
 				expect(err).to.be.an('array');
@@ -52,7 +52,7 @@ describe('SyncBuild', function () {
 		it('should retry up to five times if the copy operation fails', function (done) {
 			speedboat.copyFolder._rejectWith = new Error('mock error');
 			var cmd = syncBuildCommand(speedboat);
-			cmd(droplet.id, '/mock/build/path').then(function () {
+			cmd(droplet.id).then(function () {
 				done('deferred should not have been resolved');
 			}, function (err) {
 				expect(speedboat.copyFolder).to.have.been.called.exactly(5);

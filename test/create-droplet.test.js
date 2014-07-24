@@ -14,14 +14,12 @@ var createDropletCmd = require('../src/command/create-droplet');
 var mockSpeedboat = require('./mock-speedboat');
 var speedboat = {};
 var droplet = {};
-var buildPath = '';
 var mockScriptsPath = '';
 
 describe('CreateDroplet', function () {
 	beforeEach(function (done) {
 		speedboat = mockSpeedboat();
 		droplet.id = Date.now();
-		buildPath = path.join(__dirname, 'mock-build');
 		mockScriptsPath = path.join(__dirname, 'mock-scripts');
 		done();
 	});
@@ -36,7 +34,7 @@ describe('CreateDroplet', function () {
 		it('should succeed if the droplet is provisioned', function (done) {
 			speedboat.provision._resolveWith = [droplet];
 			var cmd = createDropletCmd(speedboat);
-			cmd(buildPath, mockScriptsPath, 'hostname', 'subdomain').then(function (actual) {
+			cmd(mockScriptsPath, 'hostname', 'subdomain').then(function (actual) {
 				expect(speedboat.provision).to.have.been.called;
 				expect(actual).to.equal(droplet);
 				done();
@@ -48,7 +46,7 @@ describe('CreateDroplet', function () {
 		it('should fail if the droplet is not provisioned', function (done) {
 			var expected = speedboat.provision._rejectWith = new Error('provision');
 			var cmd = createDropletCmd(speedboat);
-			cmd(buildPath, mockScriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd(mockScriptsPath, 'hostname', 'subdomain').then(function () {
 				done('deferred should not have been resolved');
 			}, function (actual) {
 				expect(actual).to.equal(expected);
@@ -61,23 +59,10 @@ describe('CreateDroplet', function () {
 		it('should combine subdomain and hostname', function (done) {
 			speedboat.provision._resolveWith = droplet;
 			var cmd = createDropletCmd(speedboat);
-			cmd(buildPath, mockScriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd(mockScriptsPath, 'hostname', 'subdomain').then(function () {
 				expect(speedboat.provision._args).to.have.length(2);
 				// script paths from the mock-scripts directory
 				expect(speedboat.provision._args[0].name).to.equal('subdomain.hostname');
-				done();
-			}, function () {
-				done('deferred should not have been rejected');
-			});
-		});
-
-		it('should include references to all scripts in script path', function (done) {
-			speedboat.provision._resolveWith = droplet;
-			var cmd = createDropletCmd(speedboat);
-			cmd(buildPath, mockScriptsPath, 'hostname', 'subdomain').then(function () {
-				expect(speedboat.provision._args).to.have.length(2);
-				// script paths from the mock-scripts directory
-				expect(speedboat.provision._args[0].scripts).to.have.length(3);
 				done();
 			}, function () {
 				done('deferred should not have been rejected');

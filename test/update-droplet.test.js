@@ -30,7 +30,7 @@ describe('UpdateDroplet', function () {
 	describe('invoking the command function', function () {
 		it('should succeed if the folder gets copied', function (done) {
 			var cmd = updateDropletCmd(speedboat);
-			cmd(droplet, '/mock/build/path').then(function () {
+			cmd(droplet).then(function () {
 				expect(speedboat.copyFolder).to.have.been.called;
 				done();
 			}, function () {
@@ -41,7 +41,7 @@ describe('UpdateDroplet', function () {
 		it('should fail if the folder cannot be copied', function (done) {
 			speedboat.copyFolder._rejectWith = new Error('mock error');
 			var cmd = updateDropletCmd(speedboat);
-			cmd(droplet, '/mock/build/path').then(function () {
+			cmd(droplet).then(function () {
 				done('deferred should not have been resolved');
 			}, function (err) {
 				expect(err).to.be.an('array');

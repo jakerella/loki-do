@@ -24,23 +24,23 @@ module.exports = function (speedboat) {
 		copyBuild = copyBuildCmd(speedboat),
 		startApp = startAppCmd(speedboat);
 
-	return function deploy (buildPath, scriptsPath, hostname, subdomain) {
+	return function deploy (scriptsPath, hostname, subdomain) {
 
 		function deployToExisting(droplet) {
-			return updateDroplet(droplet, buildPath).then(function () {
+			return updateDroplet(droplet).then(function () {
 				return restartApp(droplet.id);
 			});
 		}
 
 		function deployToNew() {
-			return createDroplet(buildPath, scriptsPath, hostname, subdomain).then(function (droplet) {
+			return createDroplet(scriptsPath, hostname, subdomain).then(function (droplet) {
 				return droplet;
 			}).then(function (droplet) {
 				return registerDomain(droplet.id, subdomain).then(function () {
 					return droplet;
 				});
 			}).then(function (droplet) {
-				return copyBuild(droplet.id, buildPath).then(function () {
+				return copyBuild(droplet.id).then(function () {
 					return droplet;
 				});
 			}).then(function (droplet) {

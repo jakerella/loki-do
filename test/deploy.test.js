@@ -15,8 +15,7 @@ var mockSpeedboat = require('./mock-speedboat');
 var speedboat = {};
 var droplet = {};
 
-var buildPath = path.join(__dirname, 'mock-build'),
-	scriptsPath = path.join(__dirname, 'mock-scripts');
+var scriptsPath = path.join(__dirname, 'mock-scripts');
 
 describe('Deploy', function () {
 	beforeEach(function (done) {
@@ -36,7 +35,7 @@ describe('Deploy', function () {
 		it('should succeed if the deploy command is successful', function (done) {
 			speedboat.getDropletByName._resolveWith = droplet;
 			var cmd = deployCmd(speedboat);
-			cmd(buildPath, scriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
 				done();
 			}, function (err) {
 				done('deferred should not have been rejected', err);
@@ -52,7 +51,7 @@ describe('Deploy', function () {
 			speedboat.provision._resolveWith = [droplet];
 			speedboat.domainRecordGetAll._resolveWith = [];
 			var cmd = deployCmd(speedboat);
-			cmd(buildPath, scriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
 				done();
 			}, function (err) {
 				done('deferred should not have been rejected', err);

@@ -11,13 +11,14 @@ var Q = require('q'),
  */
 module.exports = function (speedboat) {
 
-	return function createDroplet (buildPath, scriptsPath, hostname, subdomain) {
-		var deferred = Q.defer(),
+	return function createDroplet (scriptsPath, hostname, subdomain) {
+		var tmpDir = 'build-temp',
+            deferred = Q.defer(),
 			promise = deferred.promise;
 
 		// TODO: why are these scripts being added here?
-		var provisionScript = buildPath + '/provision.sh',
-			buildScript = buildPath + '/build.sh',
+		var provisionScript = tmpDir + '/provision.sh',
+			buildScript = tmpDir + '/build.sh',
 			scripts = glob.sync(scriptsPath + '/*');
 
 		if (fs.existsSync(provisionScript)) {
