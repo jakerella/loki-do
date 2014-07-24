@@ -41,13 +41,15 @@ describe('execute module', function() {
 		};
 		configMock = {
 			hostname: 'a2mock.com',
-			client_id: '1234567890987654321',
-			api_key: 'abcdefghijklmnopqrstuvwxyz',
-			ssh_key_id: '123456',
-			public_ssh_key: '/mock/key.pub',
-			private_ssh_key: 'mock/key',
-			enable_logging: true,
-			scripts_path: '/mock/scripts',
+            digital_ocean: {
+                client_id: '1234567890987654321',
+                api_key: 'abcdefghijklmnopqrstuvwxyz',
+                ssh_key_id: '123456',
+                public_ssh_key: '/mock/key.pub',
+                private_ssh_key: 'mock/key',
+                enable_logging: true,
+                scripts_path: '/mock/scripts'
+            },
 			log_file: '/mock/tc.log'
 		};
 		_consoleLog = console.log;
@@ -193,14 +195,14 @@ describe('execute module', function() {
 				'script/path.js',
 				'deploy',
 				'.',
-				'--doconfig=../test/doconfig.json'
+				'--config=../test/config.json'
 			]);
 
 			expect(result).to.be.a.object;
 			expect(result.then).to.be.a.function;
 			return result.then(
 				function() {
-					expect(console.log).to.have.been.called(3);
+					expect(console.log).to.have.been.called(4);
 					expect(execute.showUsage).to.not.have.been.called();
 				},
 				function() {

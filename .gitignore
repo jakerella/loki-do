@@ -2,4 +2,4 @@
 node_modules/
 
 # this file is used for the actual builds, we don't want it in the repo.
-/doconfig.json
+/config.json

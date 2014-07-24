@@ -54,33 +54,34 @@ var mod = {
 			self.exit(25, new Error('That is not a valid command'));
 		}
 
-		if (!options.doconfig) {
-			self.exit(30, new Error('cloud configuration path not specified'));
+		if (!options.config) {
+			self.exit(30, new Error('configuration object path not specified'));
 		}
 
-		var doConfigPath = path.resolve(__dirname, options.doconfig);
+		var configPath = path.resolve(__dirname, options.config);
 
-		if (!fs.existsSync(doConfigPath)) {
+		if (!fs.existsSync(configPath)) {
 			self.exit(35, new Error('cloud configuration path does not exist'));
 		}
 
 		console.log('Executing command:', JSON.stringify(options));
 
-		var doConfig;
+		var configObject;
 		try {
-			doConfig = fileToJSON(doConfigPath);
+			configObject = fileToJSON(configPath);
+            console.log('Using config: ', JSON.stringify(configObject));
 		} catch (e) {
 			mod.showUsage();
-			self.exit(40, new Error('cloud configuration file is not valid JSON'));
+			self.exit(40, new Error('configuration object file is not valid JSON'));
 		}
 
 		var speedboat = new SpeedBoat({
-			client_id: doConfig.client_id,
-			api_key: doConfig.api_key,
-			ssh_key_id: doConfig.ssh_key_id,
-			public_ssh_key: doConfig.public_ssh_key,
-			private_ssh_key: doConfig.private_ssh_key,
-			enable_logging: doConfig.enable_logging
+			client_id: configObject.digital_ocean.client_id,
+			api_key: configObject.digital_ocean.api_key,
+			ssh_key_id: configObject.digital_ocean.ssh_key_id,
+			public_ssh_key: configObject.digital_ocean.public_ssh_key,
+			private_ssh_key: configObject.digital_ocean.private_ssh_key,
+			enable_logging: configObject.digital_ocean.enable_logging
 		});
 		
 		var deploy = deployCmd(speedboat);
@@ -152,10 +153,11 @@ var mod = {
 			"    command       What to run on the remote server (see 'Commands' above)",
 			"    project-path  Path to the project on the CI server (not remote server);",
 			"                 must have a package.json file at that location",
-			"    doconfig      Path to the Digital Ocean configuration file (JSON)",
 			"",
 			"  Options",
 			"    --subdomain   The subdomain to use for the remote server deployment",
+            "    --config      Path to the configuration object file (JSON), should include ",
+            "                  cloud deployment config",
 			"    --help        Show this usage information"
 		].join(EOL));
 	},
