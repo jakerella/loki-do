@@ -81,7 +81,8 @@ var mod = {
 			ssh_key_id: configObject.digital_ocean.ssh_key_id,
 			public_ssh_key: configObject.digital_ocean.public_ssh_key,
 			private_ssh_key: configObject.digital_ocean.private_ssh_key,
-			enable_logging: configObject.digital_ocean.enable_logging
+			enable_logging: configObject.digital_ocean.enable_logging,
+            scripts_path: configObject.digital_ocean.scripts_path
 		});
 		
 		var deploy = deployCmd(speedboat);
