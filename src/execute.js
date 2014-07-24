@@ -77,7 +77,6 @@ var mod = {
 		var speedboat = new SpeedBoat({
 			client_id: doConfig.client_id,
 			api_key: doConfig.api_key,
-			scripts_path: doConfig.scripts_path,
 			ssh_key_id: doConfig.ssh_key_id,
 			public_ssh_key: doConfig.public_ssh_key,
 			private_ssh_key: doConfig.private_ssh_key,
