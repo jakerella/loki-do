@@ -54,6 +54,7 @@ describe('Deploy', function () {
 			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
 				done();
 			}, function (err) {
+				console.log(err);
 				done('deferred should not have been rejected', err);
 			});
 		});

@@ -9,7 +9,7 @@ var Q = require('q'),
  * @param {Speedboat} speedboat
  * @returns {Function}
  */
-module.exports = function (speedboat, retryInterval) {
+module.exports = function (speedboat, retryInterval, retryAttempts) {
 
 	return function copyBuild (boxId) {
 		var tmpDir = 'build-temp',
@@ -19,7 +19,7 @@ module.exports = function (speedboat, retryInterval) {
 		var MOVE_DIR_CMD = 'mv /opt/' + path.basename(tmpDir) + ' /opt/app';
 
 		var RETRY_INTERVAL = Math.abs(retryInterval || (1000 * 30));
-		var MAX_ATTEMPTS = 1;
+		var MAX_ATTEMPTS = retryAttempts || 1;
 		var attempts = 0;
 		var retry = true;
 		var errors = [];

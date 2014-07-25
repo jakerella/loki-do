@@ -45,7 +45,7 @@ describe('CopyBulid', function () {
 		it('should fail if the build folder cannot be copied to the droplet after five retries', function (done) {
 			this.timeout(5000);
 			speedboat.copyFolder._rejectWith = new Error('copyFolder');
-			var cmd = copyBuildCmd(speedboat, RETRY_INTERVAL);
+			var cmd = copyBuildCmd(speedboat, RETRY_INTERVAL, 5);
 			cmd(droplet.id).then(function () {
 				done('deferred should not have been resolved');
 			}, function (err) {

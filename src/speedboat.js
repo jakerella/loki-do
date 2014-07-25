@@ -1,5 +1,6 @@
 'use strict';
-var MotorBoat = require('motorboat'),
+var exec = require('child_process').exec,
+	MotorBoat = require('motorboat'),
 	CommandError = require('./command/command-error');
 
 function SpeedBoat(options) {
@@ -34,6 +35,27 @@ SpeedBoat.prototype.plot = function (boxId, cmd, cb) {
 	 * elsewhere (e.g., in an async.* method)
 	 */
 	return plot;
+};
+
+SpeedBoat.prototype.purgeKnownHost = function (ipAddress, knownHostsPath) {
+
+	var cmd = ('ssh-keygen -f "%s" -R %s')
+		.replace('%s', knownHostsPath)
+		.replace('%s', ipAddress);
+
+	console.info('purging known host', cmd);
+
+	exec(cmd, function (err, stdout, stderr) {
+		if (err) {
+			return cb(err);
+		}
+		err = (stderr || '').toString();
+		if (err) {
+			return cb(new Error(err));
+		}
+		console.info((stdout || '').toString());
+		cb();
+	});
 };
 
 module.exports = SpeedBoat;

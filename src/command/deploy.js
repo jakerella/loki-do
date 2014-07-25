@@ -7,7 +7,8 @@ var Q = require('q'),
 	registerDomainCmd = require('./register-domain'),
 	restartAppCmd = require('./restart-app'),
 	copyBuildCmd = require('./copy-build'),
-	startAppCmd = require('./start-app');
+	startAppCmd = require('./start-app'),
+	purgeKnownHostCmd = require('./purge-known-host');
 
 function logCmd(name, cmd) {
 	return function () {
@@ -35,7 +36,8 @@ module.exports = function (speedboat) {
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
 		restartApp = logCmd('restartApp', restartAppCmd(speedboat)),
 		copyBuild = logCmd('copyBuild', copyBuildCmd(speedboat)),
-		startApp = logCmd('startApp', startAppCmd(speedboat));
+		startApp = logCmd('startApp', startAppCmd(speedboat)),
+		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
 	return function deploy (scriptsPath, hostname, subdomain) {
 
@@ -48,6 +50,10 @@ module.exports = function (speedboat) {
 		function deployToNew() {
 			return createDroplet(scriptsPath, hostname, subdomain).then(function (droplet) {
 				return droplet;
+			}).then(function (droplet) {
+				return purgeKnownHost(droplet.ip_address, '/home/buildagent/.ssh/known_hosts').then(function () {
+					return droplet;
+				});
 			}).then(function (droplet) {
 				return registerDomain(droplet.id, subdomain).then(function () {
 					return droplet;

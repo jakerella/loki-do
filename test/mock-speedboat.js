@@ -52,6 +52,8 @@ function mockDecorator (speedboatMock) {
 
 	addMethodSpy(mock, 'domainRecordNew', false);
 
+	addMethodSpy(mock, 'purgeKnownHost', false);
+
 	return mock;
 }
 
