@@ -31,7 +31,7 @@ module.exports = function (speedboat) {
 
 		// TODO: make provision options configurable
 		speedboat.provision({
-			name: subdomain + '.' + hostname,
+			name: [subdomain, '.', hostname].join(''),
 			size: 66,
 			image: 4426659,
 			region: 4,

@@ -70,7 +70,8 @@ module.exports = function (speedboat) {
 		var deferred = Q.defer(),
 			promise = deferred.promise;
 
-		fetchDroplet(subdomain).then(function (droplet) {
+		var dropletName = [subdomain, '.', hostname].join('');
+		fetchDroplet(dropletName).then(function (droplet) {
 			if (!droplet) {
 				return deployToNew();
 			}
