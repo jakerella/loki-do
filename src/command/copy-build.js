@@ -44,6 +44,8 @@ module.exports = function (speedboat, retryInterval, retryAttempts) {
 					return countdown.on('end', cb);
 				}
 				// operation success, no more retries
+				console.info('moving: %s to %s', remoteBuildPath, remoteAppPath);
+				console.info(MOVE_DIR_CMD);
 				speedboat.runInstanceCommand(boxId, MOVE_DIR_CMD, function (err) {
 					if (err) {
 						return deferred.reject(err);
