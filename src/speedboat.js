@@ -46,12 +46,10 @@ SpeedBoat.prototype.purgeKnownHost = function (ipAddress, knownHostsPath, cb) {
 	console.info('purging known host', cmd);
 
 	exec(cmd, function (err, stdout, stderr) {
+		console.info('???', arguments);
 		if (err) {
+			err.detail = stderr.toString();
 			return cb(err);
-		}
-		err = (stderr || '').toString();
-		if (err) {
-			return cb(new Error(err));
 		}
 		console.info((stdout || '').toString());
 		cb();
