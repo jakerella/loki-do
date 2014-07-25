@@ -77,9 +77,10 @@ module.exports = function (speedboat) {
 			return deployToExisting(droplet);
 		}).then(function (/*result*/) {
 			deferred.resolve();
-		}).catch(function (err) {
+		}).fail(function (err) {
 			deferred.reject(err);
-		});
+		})
+		.done();
 
 		return promise;
 	};
