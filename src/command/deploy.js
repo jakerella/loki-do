@@ -14,7 +14,7 @@ function logCmd(name, cmd) {
 	return function () {
 		console.info('>', name, arguments);
 		return cmd.apply(null, arguments).then(function (result) {
-			console.info('<', name);
+			console.info('<', name, arguments);
 			return result;
 		}, function (err) {
 			console.error('X', name, JSON.stringify(err), err.trace || '');

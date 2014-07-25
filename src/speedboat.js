@@ -37,7 +37,7 @@ SpeedBoat.prototype.plot = function (boxId, cmd, cb) {
 	return plot;
 };
 
-SpeedBoat.prototype.purgeKnownHost = function (ipAddress, knownHostsPath) {
+SpeedBoat.prototype.purgeKnownHost = function (ipAddress, knownHostsPath, cb) {
 
 	var cmd = ('ssh-keygen -f "%s" -R %s')
 		.replace('%s', knownHostsPath)
