@@ -19,7 +19,7 @@ module.exports = function (speedboat, retryInterval) {
 		var MOVE_DIR_CMD = 'mv /opt/' + path.basename(tmpDir) + ' /opt/app';
 
 		var RETRY_INTERVAL = Math.abs(retryInterval || (1000 * 30));
-		var MAX_ATTEMPTS = 5;
+		var MAX_ATTEMPTS = 1;
 		var attempts = 0;
 		var retry = true;
 		var errors = [];
@@ -32,7 +32,10 @@ module.exports = function (speedboat, retryInterval) {
 				errors.push(new Error('max attempts exceeded'));
 				return cb(errors);
 			}
-			speedboat.copyFolder(boxId, '.', '/opt/' + path.basename(tmpDir), function (err) {
+			var localPath = path.resolve('.');
+			var remotePath = path.join('/opt', path.basename(tmpDir));
+			console.info('copying: %s to %s', localPath, remotePath);
+			speedboat.copyFolder(boxId, localPath, remotePath, function (err) {
 				if (err) {
 					errors.push(err);
 					// attempt another re-try once the countdown concludes
