@@ -3,16 +3,22 @@ var Q = require('q');
 
 module.exports = function (speedboat) {
 
-	return function (ipAddress, knownHostsPath) {
+	return function (boxId, knownHostsPath) {
 
 		var deferred = Q.defer(),
 			promise = deferred.promise;
 
-		speedboat.purgeKnownHost(ipAddress, knownHostsPath, function (err) {
+		speedboat.dropletGet(boxId, function (err, droplet) {
 			if (err) {
 				return deferred.reject(err);
 			}
-			deferred.resolve();
+
+			speedboat.purgeKnownHost(droplet.ip_address, knownHostsPath, function (err) {
+				if (err) {
+					return deferred.reject(err);
+				}
+				deferred.resolve();
+			});
 		});
 
 		return promise;

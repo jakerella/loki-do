@@ -51,7 +51,7 @@ module.exports = function (speedboat) {
 			return createDroplet(scriptsPath, hostname, subdomain).then(function (droplet) {
 				return droplet;
 			}).then(function (droplet) {
-				return purgeKnownHost(droplet.ip_address, '/home/buildagent/.ssh/known_hosts').then(function () {
+				return purgeKnownHost(droplet.id, '/home/buildagent/.ssh/known_hosts').then(function () {
 					return droplet;
 				});
 			}).then(function (droplet) {
