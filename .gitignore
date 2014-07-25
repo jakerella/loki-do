@@ -1,5 +1,6 @@
 .DS_Store
 node_modules/
+.tmp/
 
 # this file is used for the actual builds, we don't want it in the repo.
 /config.json
