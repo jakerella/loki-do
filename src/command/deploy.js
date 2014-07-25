@@ -11,7 +11,7 @@ var Q = require('q'),
 
 function logCmd(name, cmd) {
 	return function () {
-		console.info('>', name);
+		console.info('>', name, arguments);
 		return cmd.apply(null, arguments).then(function (result) {
 			console.info('<', name);
 			return result;
