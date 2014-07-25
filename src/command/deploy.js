@@ -9,6 +9,19 @@ var Q = require('q'),
 	copyBuildCmd = require('./copy-build'),
 	startAppCmd = require('./start-app');
 
+function logCmd(name, cmd) {
+	return function () {
+		console.info('>', name);
+		return cmd.apply(null, arguments).then(function (result) {
+			console.info('<', name);
+			return result;
+		}, function (err) {
+			console.error('X', name, JSON.stringify(err), err.trace || '');
+			return err;
+		});
+	};
+}
+
 /**
  *
  * @param {Speedboat} speedboat
@@ -16,13 +29,13 @@ var Q = require('q'),
  */
 module.exports = function (speedboat) {
 
-	var fetchDroplet = fetchDropletCmd(speedboat),
-		updateDroplet = updateDropletCmd(speedboat),
-		createDroplet = createDropletCmd(speedboat),
-		registerDomain = registerDomainCmd(speedboat),
-		restartApp = restartAppCmd(speedboat),
-		copyBuild = copyBuildCmd(speedboat),
-		startApp = startAppCmd(speedboat);
+	var fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
+		updateDroplet = logCmd('updateDroplet', updateDropletCmd(speedboat)),
+		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
+		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
+		restartApp = logCmd('restartApp', restartAppCmd(speedboat)),
+		copyBuild = logCmd('copyBuild', copyBuildCmd(speedboat)),
+		startApp = logCmd('startApp', startAppCmd(speedboat));
 
 	return function deploy (scriptsPath, hostname, subdomain) {
 
