@@ -13,12 +13,13 @@ module.exports = function (speedboat, retryInterval, retryAttempts) {
 
 	return function copyBuild (boxId) {
 		var localBuildPath = path.resolve('.'),
-			remoteBuildPath = '/opt/build-tmp',
+			remoteTmpPath = '/opt/build-tmp',
+			remoteBuildPath = path.join(remoteTmpPath, path.basename(localBuildPath)),
 			remoteAppPath = '/opt/app',
             deferred = Q.defer(),
 			promise = deferred.promise;
 
-		var MOVE_DIR_CMD = ['mv', path.join(remoteBuildPath, path.basename(localBuildPath)), remoteAppPath].join(' ');
+		var MOVE_DIR_CMD = ['mv', remoteBuildPath, remoteAppPath].join(' ');
 
 		var RETRY_INTERVAL = Math.abs(retryInterval || (1000 * 30));
 		var MAX_ATTEMPTS = retryAttempts || 1;
@@ -34,8 +35,8 @@ module.exports = function (speedboat, retryInterval, retryAttempts) {
 				errors.push(new Error('max attempts exceeded'));
 				return cb(errors);
 			}
-			console.info('copying: %s to %s', localBuildPath, remoteBuildPath);
-			speedboat.copyFolder(boxId, localBuildPath, remoteBuildPath, function (err) {
+			console.info('copying: %s to %s', localBuildPath, remoteTmpPath);
+			speedboat.copyFolder(boxId, localBuildPath, remoteTmpPath, function (err) {
 				if (err) {
 					errors.push(err);
 					// attempt another re-try once the countdown concludes
