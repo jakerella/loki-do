@@ -63,12 +63,42 @@ module.exports = function (speedboat) {
 
 		var dropletName = [options.subdomain, '.', options.configObject.hostname].join('');
 		fetchDroplet(dropletName).then(function (droplet) {
+			
 			if (!droplet) {
 				return deployToNew();
 			}
+			
 			return deployToExisting(droplet);
-		}).then(function (/*result*/) {
+
+		}).then(function (droplet) {
+
+			async.series([
+				
+				speedboat.plot(droplet.id, [
+					['cd ', options.configObject.temp, ';'].join(' '),
+					['rm -rf project-build/;']
+				].join(' ')),
+
+				speedboat.plot(droplet.id, [
+					['cd ', options.configObject.temp, ';'].join(' '),
+					['git clone ', options.vcsurl].join(' ')
+				].join(' ')),
+
+				speedboat.plot(droplet.id, [
+					['cd ', options.configObject.temp, ';'].join(' '),
+					['cd project-build/;'].join(' '),
+					['npm ', options.command].join(' ')
+				].join(' '))
+
+			], function (err, results) {
+				if (err) {
+					return deferred.reject(err);
+				}
+				deferred.resolve(results);
+			});
+
 			deferred.resolve();
+
 		}).fail(function (err) {
 			deferred.reject(err);
 		})
