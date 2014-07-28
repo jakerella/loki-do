@@ -8,20 +8,23 @@ var fs = require('fs'),
 	SpeedBoat = require('./speedboat'),
 	runNpmCmd = require('./command/npm-command'),
 	EOL = require('os').EOL,
+
 	COMMANDS = {
-		// `true` values simply do `npm [command]` and report the result
-		// any others should be `require()` statements that return a 
-		// function to call which accepts an options block.
-		help: true,
+		// any custom command (not simply npm [command]) should be a 
+		// `require()` statement that returns a  function to call which 
+		// accepts an options block.
+		help: {},
 		proivisionCmd: require('./command/provision'),
-		stop: true,
-		test: true,
-		deploy: true,
-		prestart: true,
-		start: true
+		stop: { cwd: 'destination' },
+		test: { cwd: 'temp' },
+		deploy: { cwd: 'destination' },
+		prestart: { cwd: 'destination' },
+		start: { cwd: 'destination' }
 	};
 
+// Constants
 var IS_EXECUTING = (require.main === module);
+
 
 var mod = {
 	MIN_OPTION_ERROR: 100,
@@ -36,7 +39,7 @@ var mod = {
 	 */
 	main: function (args) {
 
-		var runNpm, cmd,
+		var runNpm, cmd, cwd,
 			self = this,
 			options = mod.parseArgsAndOptions(args);
 
@@ -65,19 +68,7 @@ var mod = {
 
 		runNpm = runNpmCmd(speedboat);
 		
-		if (COMMANDS[options.command] === true) {
-			return runNpm(options).then(
-				function (results) {
-					console.log('Command finished (npm ' + options.command + '):');
-					console.log(results);
-					self.exit(0);
-				},
-				function (err) {
-					self.exit(13, err);
-				}
-			);
-
-		} else if (typeof COMMANDS[options.command] === 'function') {
+		if (typeof COMMANDS[options.command] === 'function') {
 			cmd = COMMANDS[options.command](speedboat);
 			return cmd(options).then(
 				function (results) {
@@ -89,6 +80,19 @@ var mod = {
 					self.exit(17, err);
 				}
 			);
+		} else if (COMMANDS[options.command]) {
+			cwd = options.configObject[COMMANDS[options.command].cwd] || null;
+			return runNpm(options, cwd).then(
+				function (results) {
+					console.log('Command finished (npm ' + options.command + '):');
+					console.log(results);
+					self.exit(0);
+				},
+				function (err) {
+					self.exit(13, err);
+				}
+			);
+
 		}
 	},
 
@@ -228,9 +232,16 @@ var mod = {
 			"                  scripts. If the server already exists, nothing happens.",
 			"                  Note that this command requires the 'subdomain' option!",
 			"                  configuration block (currently 'digitial_ocean')",
-			"    stop          Execute the 'stop' command of package.json 'scripts' block",
+			"                  NOTE: 'provision' will also checkout your project code",
+			"                        from source control, then run 'npm provision' if this",
+			"                        is a new server",
 			"    test          Execute the 'test' command of package.json 'scripts' block",
-			"    deploy        Execute the 'deploy' command of package.json 'scripts' block",
+			"    stop          Execute the 'stop' command of package.json 'scripts' block",
+			"    deploy        This commmand copies the project files from the temporary",
+			"                  location to the destination at which point the `deploy`",
+			"                  command in the package.json 'scripts' block is run",
+			"                  NOTE: The application should be stopped BEFORE this command",
+			"                        is run!",
 			"    prestart      Execute the 'prestart' command of package.json 'scripts' block",
 			"                  NOTE: you should probably NOT use this command. It will be",
 			"                        run automatically before any 'start' command!",

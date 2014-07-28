@@ -1,5 +1,6 @@
 {
     "hostname": "example.com",
+    "temp": "/opt/temp",
     "destination": "/opt/app",
     "image_id": 12345,
     "digital_ocean": {

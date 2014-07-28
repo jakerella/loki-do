@@ -10,14 +10,16 @@ var Q = require('q'),
  * @returns {Function}
  */
 module.exports = function (speedboat, _fetchDropletCmd_) {
-	var CD_APP = 'cd /opt/app;',
+	var DEFAULT_DIR = '/opt/app',
 		fetchDropletCmd = _fetchDropletCmd_ || fetchDropletCmd;
 
-	return function runNpmCommand (options) {
+	return function runNpmCommand (options, cwd) {
 		var fetchDroplet = fetchDropletCmd(speedboat),
 			deferred = Q.defer(),
 			promise = deferred.promise,
 			dropletName = options.subdomain + '.' + options.configObject.hostname;
+
+		cwd = cwd || DEFAULT_DIR;
 
 		fetchDroplet(dropletName)
 			.then(function (droplet) {
@@ -27,7 +29,10 @@ module.exports = function (speedboat, _fetchDropletCmd_) {
 				
 				async.series([
 					
-					speedboat.plot(droplet.id, [CD_APP, 'npm ' + options.command].join(' '))
+					speedboat.plot(droplet.id, [
+						['cd ', cwd, ';'].join(' '),
+						['npm ', options.command].join(' ')
+					].join(' '))
 
 				], function (err, results) {
 					if (err) {
