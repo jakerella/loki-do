@@ -1,3 +1,4 @@
+/*jshint node:true*/
 'use strict';
 var Q = require('q'),
 	async = require('async'),
@@ -5,9 +6,6 @@ var Q = require('q'),
 	updateDropletCmd = require('./update-droplet'),
 	createDropletCmd = require('./create-droplet'),
 	registerDomainCmd = require('./register-domain'),
-	restartAppCmd = require('./restart-app'),
-	copyBuildCmd = require('./copy-build'),
-	startAppCmd = require('./start-app'),
 	purgeKnownHostCmd = require('./purge-known-host');
 
 function logCmd(name, cmd) {
@@ -34,17 +32,12 @@ module.exports = function (speedboat) {
 		updateDroplet = logCmd('updateDroplet', updateDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
-		restartApp = logCmd('restartApp', restartAppCmd(speedboat)),
-		copyBuild = logCmd('copyBuild', copyBuildCmd(speedboat)),
-		startApp = logCmd('startApp', startAppCmd(speedboat)),
 		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
-	return function deploy (scriptsPath, hostname, subdomain) {
+	return function provision (scriptsPath, hostname, subdomain) {
 
 		function deployToExisting(droplet) {
-			return updateDroplet(droplet).then(function () {
-				return restartApp(droplet.id);
-			});
+			return updateDroplet(droplet);
 		}
 
 		function deployToNew() {
@@ -58,12 +51,6 @@ module.exports = function (speedboat) {
 				return registerDomain(droplet.id, subdomain).then(function () {
 					return droplet;
 				});
-			}).then(function (droplet) {
-				return copyBuild(droplet.id).then(function () {
-					return droplet;
-				});
-			}).then(function (droplet) {
-				return startApp(droplet.id);
 			});
 		}
 

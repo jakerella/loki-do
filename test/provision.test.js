@@ -1,4 +1,4 @@
-/*global describe, it, beforeEach, afterEach, expect*/
+/*global describe, it, beforeEach, afterEach*/
 // libraries
 var path = require('path'),
 	chai = require('chai'),
@@ -8,7 +8,7 @@ var path = require('path'),
 chai.use(spies);
 
 // code under test
-var deployCmd = require('../src/command/deploy');
+var provisionCmd = require('../src/command/provision');
 
 // mocks
 var mockSpeedboat = require('./mock-speedboat');
@@ -18,15 +18,30 @@ var droplet = {};
 var scriptsPath = path.join(__dirname, 'mock-scripts');
 
 describe('Deploy', function () {
+	var _consoleInfo, _consoleError;
+
 	beforeEach(function (done) {
 		speedboat = mockSpeedboat();
 		droplet.id = Date.now();
 		droplet.ip_address = '111.111.111.111';
+
+		_consoleInfo = console.info;
+		_consoleError = console.error;
+		console.info = chai.spy(function() {}); // we don't really want to log stuff
+		console.info._real = _consoleInfo; // just in case we need it
+		console.error = chai.spy(function() {}); // we don't really want to log stuff
+
 		done();
 	});
 
+	afterEach(function() {
+		// let's put the console methods back
+		console.info = _consoleInfo;
+		console.error = _consoleError;
+	});
+
 	it('returns a command function', function (done) {
-		var actual = deployCmd(speedboat);
+		var actual = provisionCmd(speedboat);
 		expect(actual).to.be.a('function');
 		done();
 	});
@@ -34,7 +49,7 @@ describe('Deploy', function () {
 	describe('when a droplet already exists', function () {
 		it('should succeed if the deploy command is successful', function (done) {
 			speedboat.getDropletByName._resolveWith = droplet;
-			var cmd = deployCmd(speedboat);
+			var cmd = provisionCmd(speedboat);
 			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
 				done();
 			}, function (err) {
@@ -50,7 +65,7 @@ describe('Deploy', function () {
 			speedboat.dropletGet._resolveWith = droplet;
 			speedboat.provision._resolveWith = [droplet];
 			speedboat.domainRecordGetAll._resolveWith = [];
-			var cmd = deployCmd(speedboat);
+			var cmd = provisionCmd(speedboat);
 			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
 				done();
 			}, function (err) {

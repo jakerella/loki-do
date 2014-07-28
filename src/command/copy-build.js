@@ -30,13 +30,13 @@ module.exports = function (speedboat, retryInterval, retryAttempts) {
 		async.doWhilst(function whilstAttempt (cb) {
 			attempts += 1;
 			retry = (attempts <= MAX_ATTEMPTS);
-			console.info('attempt: %s, retry: %s', attempts, retry);
+			console.log('attempt: %s, retry: %s', attempts, retry);
 			// too many attempts, end the loop
 			if (!retry) {
 				errors.push(new Error('max attempts exceeded'));
 				return cb(errors);
 			}
-			console.info('copying: %s to %s', localBuildPath, remoteTmpPath);
+			console.log('copying: %s to %s', localBuildPath, remoteTmpPath);
 			speedboat.copyFolder(boxId, localBuildPath, remoteTmpPath, function (err) {
 				if (err) {
 					errors.push(err);
@@ -45,8 +45,8 @@ module.exports = function (speedboat, retryInterval, retryAttempts) {
 					return countdown.on('end', cb);
 				}
 				// operation success, no more retries
-				console.info('moving: %s to %s', remoteBuildPath, remoteAppPath);
-				console.info(MOVE_DIR_CMD);
+				console.log('moving: %s to %s', remoteBuildPath, remoteAppPath);
+				console.log(MOVE_DIR_CMD);
 				speedboat.runInstanceCommand(boxId, MOVE_DIR_CMD, function (err) {
 					if (err) {
 						return deferred.reject(err);

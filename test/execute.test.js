@@ -12,12 +12,10 @@ var chai = require('chai'),
 chai.use(spies);
 
 describe('execute module', function() {
-	// deploy CMD mock
-	var deployMock;
-	var deployCmdMock = function () {
-		return deployMock;
+	var runNpmMock;
+	var runNpmCmdMock = function () {
+		return runNpmMock;
 	};
-	// config mock
 	var configMock = {};
 	var fileToJSONMock = function () {
 		return configMock;
@@ -33,7 +31,7 @@ describe('execute module', function() {
 		_consoleError;
 
 	beforeEach(function() {
-		deployMock = function () {
+		runNpmMock = function () {
 			var deferred = Q.defer(),
 				promise = deferred.promise;
 			deferred.resolve();
@@ -57,7 +55,7 @@ describe('execute module', function() {
 		console.log = chai.spy(function() {}); // we don't really want to log stuff
 		console.log._real = _consoleLog; // just in case we need it
 		console.error = chai.spy(function() {}); // we don't really want to log stuff
-		execute = executeFactory(deployCmdMock, fileToJSONMock, speedBoatMock);
+		execute = executeFactory(runNpmCmdMock, fileToJSONMock, speedBoatMock);
 	});
 
 	afterEach(function() {
@@ -116,13 +114,17 @@ describe('execute module', function() {
 				'--foo3=bar3',
 				'--foo4=bar4',
 				'--foo5=bar5',
-				'--foo6=bar6'
+				'--foo6=bar6',
+				'--foo7=bar7',
+				'--foo8=bar8'
 			]);
 
 			expect(result.command).to.equal('--foo3=bar3');
 			expect(result.path).to.equal('--foo4=bar4');
-			expect(result.foo5).to.equal('bar5');
-			expect(result.foo6).to.equal('bar6');
+			expect(result.subdomain).to.equal('--foo5=bar5');
+			expect(result.config).to.equal('--foo6=bar6');
+			expect(result.foo7).to.equal('bar7');
+			expect(result.foo8).to.equal('bar8');
 
 		});
 
@@ -195,14 +197,15 @@ describe('execute module', function() {
 				'script/path.js',
 				'deploy',
 				'.',
-				'--config=../test/config.json'
+				'test',
+				'../test/config.json'
 			]);
 
 			expect(result).to.be.a.object;
 			expect(result.then).to.be.a.function;
 			return result.then(
 				function() {
-					expect(console.log).to.have.been.called(4);
+					expect(console.log).to.have.been.called(3);
 					expect(execute.showUsage).to.not.have.been.called();
 				},
 				function() {

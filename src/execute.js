@@ -6,13 +6,26 @@ var fs = require('fs'),
 	path = require('path'),
 	fileToJSON = require('./file-to-json'),
 	SpeedBoat = require('./speedboat'),
-	deployCmd = require('./command/deploy'),
-	EOL = require('os').EOL;
+	runNpmCmd = require('./command/npm-command'),
+	EOL = require('os').EOL,
+	COMMANDS = {
+		// `true` values simply do `npm [command]` and report the result
+		// any others should be `require()` statements that return a 
+		// function to call which accepts an options block.
+		help: true,
+		proivision: true,
+		stop: true,
+		test: true,
+		deploy: true,
+		prestart: true,
+		start: true
+	};
 
 var IS_EXECUTING = (require.main === module);
 
 var mod = {
-	MAX_OPTION_ERROR: 99, // the maximum error code for option/argument errors
+	MIN_OPTION_ERROR: 100,
+	MAX_OPTION_ERROR: 199,
 
 	/**
 	 * Main method which is called at the end of this file.
@@ -23,80 +36,50 @@ var mod = {
 	 */
 	main: function (args) {
 
-		var pkgFile,
+		var runNpm,
 			self = this,
 			options = mod.parseArgsAndOptions(args);
 
-		// Argument audits
-		if (!options.command) {
-			self.exit(10, new Error('No command was specified'));
-		}
-		if (options.command === '-h' || options.command === '--help') {
+		options = self.auditArgsAndOptions(options);		
+
+		if (options.command === 'help') {
+			// If the command is the help option (or shortened version)
+			// then we don't want to do anything else, including auditing
+			// other options
 			self.showUsage();
+			self.exit(0);
 			return;
-		}
-		if (!options.path) {
-			self.exit(15, new Error('No project path was specified'));
-		}
-
-		// Check the project path and package.json file
-		options.path = path.resolve(options.path);
-		pkgFile = path.join(options.path, 'package.json');
-
-		if (!fs.existsSync(pkgFile)) {
-			self.exit(20, new Error('There is no package.json file in that project path! (' + options.path + ')'));
-		}
-
-		// The current deployer setup only allows for "deploy" as a valid command.
-		// In the future, more complete lifecycle commands will be allowed based 
-		// on the package.json `scripts` block.
-		if (options.command !== 'deploy') {
-			self.exit(25, new Error('That is not a valid command'));
-		}
-
-		if (!options.config) {
-			self.exit(30, new Error('configuration object path not specified'));
-		}
-
-		var configPath = path.resolve(__dirname, options.config);
-
-		if (!fs.existsSync(configPath)) {
-			self.exit(35, new Error('cloud configuration path does not exist'));
 		}
 
 		console.log('Executing command:', JSON.stringify(options));
 
-		var configObject;
-		try {
-			configObject = fileToJSON(configPath);
-            console.log('Using config: ', JSON.stringify(configObject));
-		} catch (e) {
-			mod.showUsage();
-			self.exit(40, new Error('configuration object file is not valid JSON'));
+		var speedboat = new SpeedBoat({
+			client_id: options.configObject.digital_ocean.client_id,
+			api_key: options.configObject.digital_ocean.api_key,
+			ssh_key_id: options.configObject.digital_ocean.ssh_key_id,
+			public_ssh_key: options.configObject.digital_ocean.public_ssh_key,
+			private_ssh_key: options.configObject.digital_ocean.private_ssh_key,
+			enable_logging: options.configObject.digital_ocean.enable_logging,
+            scripts_path: options.configObject.digital_ocean.scripts_path
+		});
+
+		runNpm = runNpmCmd(speedboat);
+		
+		if (COMMANDS[options.command] === true) {
+			return runNpm(options).then(
+				function (results) {
+					console.log('Deployment finished:');
+					console.log(results);
+					self.exit(0);
+				},
+				function (err) {
+					self.exit(13, err);
+				}
+			);
 		}
 
-		var speedboat = new SpeedBoat({
-			client_id: configObject.digital_ocean.client_id,
-			api_key: configObject.digital_ocean.api_key,
-			ssh_key_id: configObject.digital_ocean.ssh_key_id,
-			public_ssh_key: configObject.digital_ocean.public_ssh_key,
-			private_ssh_key: configObject.digital_ocean.private_ssh_key,
-			enable_logging: configObject.digital_ocean.enable_logging,
-            scripts_path: configObject.digital_ocean.scripts_path
-		});
+		// TODO: what about `provision`?
 		
-		var deploy = deployCmd(speedboat);
-		return deploy(
-            configObject.digital_ocean.scripts_path,
-            configObject.hostname,
-            options.subdomain
-        ).then(function (data) {
-			console.log('deployment finished:');
-			console.log(data);
-			self.exit(0);
-		}, function (err) {
-			self.exit(100, err);
-		});
 	},
 
 	/**
@@ -110,7 +93,10 @@ var mod = {
 		var i, l,
 			options = {
 				command: null,
-				path: null
+				path: null,
+				subdomain: null,
+				config: null,
+				configObject: {}
 			};
 
 		if (!args || args.length < 3) {
@@ -120,18 +106,88 @@ var mod = {
 		if (args[2]) {
 			options.command = args[2];
 		}
-
 		if (args[3]) {
 			options.path = args[3];
 		}
+		if (args[4]) {
+			options.subdomain = args[4];
+		}
+		if (args[5]) {
+			options.config = args[5];
+		}
 
-		if (args.length > 4) {
-			for (i = 4, l = args.length; i < l; ++i) {
+		if (args.length > 6) {
+			for (i = 6, l = args.length; i < l; ++i) {
 				var parts = args[i].match(/^\-\-([^=]+)(?:=(.+))?$/);
 				if (parts) {
 					options[parts[1]] = (parts[2] || true);
 				}
 			}
+		}
+
+		return options;
+	},
+
+	/**
+	 * Audits all arguments and checks for proper file paths, etc.
+	 * 
+	 * @param  {Object} options The hash of all arguments and options
+	 * @throws {Error}          Throws error on any argument/option failure
+	 * @return {Object}         The options to use, including any changes (typically just resolution of paths and pulling in of JSON)
+	 */
+	auditArgsAndOptions: function(options) {
+		var pkgFile, configPath,
+			self = this;
+
+		options = options || {};
+
+		if (!options.command) {
+			self.exit(100, new Error('No command was specified'));
+		}
+		if (options.command === '-h' || options.command === '--help') {
+			// If the command is the help option (or shortened version)
+			// then we don't want to do anything else, including auditing
+			// other options
+			return { command: 'help' };
+		}
+		if (!COMMANDS[options.command]) {
+			self.exit(105, new Error('That is not a valid command'));
+		}
+
+		if (!options.path) {
+			self.exit(110, new Error('No project path was specified'));
+		}
+
+		// Check the project path and package.json file
+		options.path = path.resolve(options.path);
+		pkgFile = path.join(options.path, 'package.json');
+
+		if (!fs.existsSync(pkgFile)) {
+			self.exit(115, new Error('There is no package.json file in that project path! (' + options.path + ')'));
+		}
+
+		if (!options.subdomain) {
+			self.exit(120, new Error('No project subdomain was specified'));
+		}
+
+		if (!options.config) {
+			self.exit(130, new Error('Configuration object path not specified'));
+		}
+
+		configPath = path.resolve(__dirname, options.config);
+
+		if (!fs.existsSync(configPath)) {
+			self.exit(133, new Error('Configuration object path does not exist'));
+		}
+
+		try {
+			options.configObject = fileToJSON(configPath);
+		} catch (e) {
+			self.exit(136, new Error('Configuration object file is not valid JSON'));
+		}
+
+		if (!options.configObject.digital_ocean) {
+			self.exit(136, new Error('Configuration object does not contain a "digital_ocean" block'));
 		}
 
 		return options;
@@ -145,24 +201,52 @@ var mod = {
 	showUsage: function () {
 		console.log([
 			"",
-			"  USAGE: node execute.js {command} {project-path} [--option=[value], ...]",
+			"  USAGE: node execute.js {command} {project-path} {subdomain} {config} [--option=[value], ...]",
 			"",
-			"  This script is used to run commands on a deployment server. The ",
-			"  intent is to allow for a bridge between the CI server and the ",
-			"  deployment server.",
+			"  This script is used to run commands on a remote deployment server. The",
+			"  intent is to allow for a bridge between the CI server and the deployment",
+			"  server and to run certain commands during the testing and deployment",
+			"  process. With the exception of 'provision', all commands here simply map",
+			"  to the 'scripts' block of the project's package.json file. In other words",
+			"  running the 'test' command here will simply execute 'npm test' within the",
+			"  target project on the destination server.",
+			"",
+			"  For example, the 'start' command here should be accompanied by a 'start'",
+			"  line in your 'scripts' block within package.json:",
+			"  {",
+			"    ...,",
+			"    \"scripts\": {",
+			"      \"start\": \"forever start node_modules/static-server/server.js --options\",",
+			"      ...",
+			"    }",
+			"  }",
 			"",
 			"  Commands",
-			"    deploy        Currently the only command, deploys project to server",
+			"    provision     Create a new server (if required) and run any provisioning",
+			"                  scripts. If the server already exists, nothing happens.",
+			"                  Note that this command requires the 'subdomain' option!",
+			"                  configuration block (currently 'digitial_ocean')",
+			"    stop          Execute the 'stop' command of package.json 'scripts' block",
+			"    test          Execute the 'test' command of package.json 'scripts' block",
+			"    deploy        Execute the 'deploy' command of package.json 'scripts' block",
+			"    prestart      Execute the 'prestart' command of package.json 'scripts' block",
+			"                  NOTE: you should probably NOT use this command. It will be",
+			"                        run automatically before any 'start' command!",
+			"    start         Execute the 'start' command of package.json 'scripts' block",
+			"                  NOTE: the 'prestart' command in the 'scripts' block will",
+			"                        always run BEFORE this command.",
 			"",
-			"  Arguments",
+			"  Arguments (REQUIRED)",
 			"    command       What to run on the remote server (see 'Commands' above)",
 			"    project-path  Path to the project on the CI server (not remote server);",
-			"                 must have a package.json file at that location",
+			"                  must have a package.json file at that location",
+			"    subdomain     The subdomain to use for the remote server deployment",
+			"    config        Path to the configuration object file (JSON), should include",
+            "                  cloud deployment config.",
+            "                  NOTE: this is NOT the config for the target project, but for",
+            "                        the CI scripts and destination cloud systems as a whole.",
 			"",
 			"  Options",
-			"    --subdomain   The subdomain to use for the remote server deployment",
-            "    --config      Path to the configuration object file (JSON), should include ",
-            "                  cloud deployment config",
 			"    --help        Show this usage information"
 		].join(EOL));
 	},
@@ -181,7 +265,8 @@ var mod = {
 			errorOrMessage.code = errorCode;
 		}
 
-		if (errorCode > 0 && errorCode <= this.MAX_OPTION_ERROR) {
+		if (errorCode >= this.MIN_OPTION_ERROR && errorCode <= this.MAX_OPTION_ERROR) {
+			// If the error occurred in the options, then show usage
 			this.showUsage();
 		}
 
@@ -202,8 +287,8 @@ var mod = {
 if (IS_EXECUTING) {
 	mod.main(process.argv);
 } else {
-	module.exports = function (_deployCmd_, _fileToJSON_, _SpeedBoat_) {
-		deployCmd = _deployCmd_ || deployCmd;
+	module.exports = function (_runNpmCmd_, _fileToJSON_, _SpeedBoat_) {
+		runNpmCmd = _runNpmCmd_ || runNpmCmd;
 		fileToJSON = _fileToJSON_ || fileToJSON;
 		SpeedBoat = _SpeedBoat_ || SpeedBoat;
 		return mod;
