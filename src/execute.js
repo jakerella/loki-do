@@ -87,13 +87,13 @@ var mod = {
 	 * (most likely from process.argv, but not necessarily)
 	 * 
 	 * @param  {Array} args An array of arguments, either simple strings, or in --name=value format
-	 * @return {Object}	A hash of the options, included required things like "command" and "path"
+	 * @return {Object}	A hash of the options, included required things like "command" and "vcsurl"
 	 */
 	parseArgsAndOptions: function (args) {
 		var i, l,
 			options = {
 				command: null,
-				path: null,
+				vcsurl: null,
 				subdomain: null,
 				config: null,
 				configObject: {}
@@ -107,7 +107,7 @@ var mod = {
 			options.command = args[2];
 		}
 		if (args[3]) {
-			options.path = args[3];
+			options.vcsurl = args[3];
 		}
 		if (args[4]) {
 			options.subdomain = args[4];
@@ -154,16 +154,8 @@ var mod = {
 			self.exit(105, new Error('That is not a valid command'));
 		}
 
-		if (!options.path) {
-			self.exit(110, new Error('No project path was specified'));
-		}
-
-		// Check the project path and package.json file
-		options.path = path.resolve(options.path);
-		pkgFile = path.join(options.path, 'package.json');
-
-		if (!fs.existsSync(pkgFile)) {
-			self.exit(115, new Error('There is no package.json file in that project path! (' + options.path + ')'));
+		if (!options.vcsurl) {
+			self.exit(110, new Error('No project version control was specified'));
 		}
 
 		if (!options.subdomain) {
@@ -238,8 +230,9 @@ var mod = {
 			"",
 			"  Arguments (REQUIRED)",
 			"    command       What to run on the remote server (see 'Commands' above)",
-			"    project-path  Path to the project on the CI server (not remote server);",
-			"                  must have a package.json file at that location",
+			"    vcs-url       URL to the repository in the version control system",
+			"                  NOTE: You must have a package.json file in that root!",
+			"                        Also, currently `git` is the only supported system.",
 			"    subdomain     The subdomain to use for the remote server deployment",
 			"    config        Path to the configuration object file (JSON), should include",
             "                  cloud deployment config.",

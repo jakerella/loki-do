@@ -1,5 +1,6 @@
 {
     "hostname": "example.com",
+    "destination": "/opt/app",
     "digital_ocean": {
         "client_id": "1234567890",
         "api_key": "0987654321",
