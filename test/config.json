@@ -1,6 +1,7 @@
 {
     "hostname": "example.com",
     "destination": "/opt/app",
+    "image_id": 12345,
     "digital_ocean": {
         "client_id": "1234567890",
         "api_key": "0987654321",

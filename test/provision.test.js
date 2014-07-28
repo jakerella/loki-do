@@ -15,9 +15,17 @@ var mockSpeedboat = require('./mock-speedboat');
 var speedboat = {};
 var droplet = {};
 
-var scriptsPath = path.join(__dirname, 'mock-scripts');
+var options = {
+	subdomain: 'subdomain',
+	configObject: {
+		hostname: 'hostname',
+		destination: '/opt/app',
+		image_id: 12345,
+		digital_ocean: {}
+	}
+};
 
-describe('Deploy', function () {
+describe('Provision', function () {
 	var _consoleInfo, _consoleError;
 
 	beforeEach(function (done) {
@@ -50,10 +58,10 @@ describe('Deploy', function () {
 		it('should succeed if the deploy command is successful', function (done) {
 			speedboat.getDropletByName._resolveWith = droplet;
 			var cmd = provisionCmd(speedboat);
-			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd(options).then(function () {
 				done();
 			}, function (err) {
-				done('deferred should not have been rejected', err);
+				done(err);
 			});
 		});
 	});
@@ -66,11 +74,11 @@ describe('Deploy', function () {
 			speedboat.provision._resolveWith = [droplet];
 			speedboat.domainRecordGetAll._resolveWith = [];
 			var cmd = provisionCmd(speedboat);
-			cmd(scriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd(options).then(function () {
 				done();
 			}, function (err) {
 				console.log(err);
-				done('deferred should not have been rejected', err);
+				done(err);
 			});
 		});
 	});

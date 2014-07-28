@@ -34,21 +34,25 @@ module.exports = function (speedboat) {
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
 		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
-	return function provision (scriptsPath, hostname, subdomain) {
+	return function provision (options) {
 
 		function deployToExisting(droplet) {
 			return updateDroplet(droplet);
 		}
 
 		function deployToNew() {
-			return createDroplet(scriptsPath, hostname, subdomain).then(function (droplet) {
+			return createDroplet(
+				options.configObject.hostname,
+				options.configObject.image_id,
+				options.subdomain
+			).then(function (droplet) {
 				return droplet;
 			}).then(function (droplet) {
 				return purgeKnownHost(droplet.id, '/home/buildagent/.ssh/known_hosts').then(function () {
 					return droplet;
 				});
 			}).then(function (droplet) {
-				return registerDomain(droplet.id, subdomain).then(function () {
+				return registerDomain(droplet.id, options.subdomain).then(function () {
 					return droplet;
 				});
 			});
@@ -57,7 +61,7 @@ module.exports = function (speedboat) {
 		var deferred = Q.defer(),
 			promise = deferred.promise;
 
-		var dropletName = [subdomain, '.', hostname].join('');
+		var dropletName = [options.subdomain, '.', options.configObject.hostname].join('');
 		fetchDroplet(dropletName).then(function (droplet) {
 			if (!droplet) {
 				return deployToNew();

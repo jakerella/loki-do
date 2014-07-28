@@ -14,13 +14,11 @@ var createDropletCmd = require('../src/command/create-droplet');
 var mockSpeedboat = require('./mock-speedboat');
 var speedboat = {};
 var droplet = {};
-var mockScriptsPath = '';
 
 describe('CreateDroplet', function () {
 	beforeEach(function (done) {
 		speedboat = mockSpeedboat();
 		droplet.id = Date.now();
-		mockScriptsPath = path.join(__dirname, 'mock-scripts');
 		done();
 	});
 
@@ -34,7 +32,7 @@ describe('CreateDroplet', function () {
 		it('should succeed if the droplet is provisioned', function (done) {
 			speedboat.provision._resolveWith = [droplet];
 			var cmd = createDropletCmd(speedboat);
-			cmd(mockScriptsPath, 'hostname', 'subdomain').then(function (actual) {
+			cmd('hostname', 12345, 'subdomain').then(function (actual) {
 				expect(speedboat.provision).to.have.been.called;
 				expect(actual).to.equal(droplet);
 				done();
@@ -46,7 +44,7 @@ describe('CreateDroplet', function () {
 		it('should fail if the droplet is not provisioned', function (done) {
 			var expected = speedboat.provision._rejectWith = new Error('provision');
 			var cmd = createDropletCmd(speedboat);
-			cmd(mockScriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd('hostname', 12345, 'subdomain').then(function () {
 				done('deferred should not have been resolved');
 			}, function (actual) {
 				expect(actual).to.equal(expected);
@@ -59,9 +57,8 @@ describe('CreateDroplet', function () {
 		it('should combine subdomain and hostname', function (done) {
 			speedboat.provision._resolveWith = droplet;
 			var cmd = createDropletCmd(speedboat);
-			cmd(mockScriptsPath, 'hostname', 'subdomain').then(function () {
+			cmd('hostname', 12345, 'subdomain').then(function () {
 				expect(speedboat.provision._args).to.have.length(2);
-				// script paths from the mock-scripts directory
 				expect(speedboat.provision._args[0].name).to.equal('subdomain.hostname');
 				done();
 			}, function () {
