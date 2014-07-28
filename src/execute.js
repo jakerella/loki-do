@@ -13,7 +13,7 @@ var fs = require('fs'),
 		// any others should be `require()` statements that return a 
 		// function to call which accepts an options block.
 		help: true,
-		proivision: true,
+		proivisionCmd: require('./command/provision'),
 		stop: true,
 		test: true,
 		deploy: true,
@@ -36,7 +36,7 @@ var mod = {
 	 */
 	main: function (args) {
 
-		var runNpm,
+		var runNpm, cmd,
 			self = this,
 			options = mod.parseArgsAndOptions(args);
 
@@ -68,7 +68,7 @@ var mod = {
 		if (COMMANDS[options.command] === true) {
 			return runNpm(options).then(
 				function (results) {
-					console.log('Deployment finished:');
+					console.log('Command finished (npm ' + options.command + '):');
 					console.log(results);
 					self.exit(0);
 				},
@@ -76,10 +76,20 @@ var mod = {
 					self.exit(13, err);
 				}
 			);
-		}
 
-		// TODO: what about `provision`?
-		
+		} else if (typeof COMMANDS[options.command] === 'function') {
+			cmd = COMMANDS[options.command](speedboat);
+			return cmd(options).then(
+				function (results) {
+					console.log('Comman finished (' + options.command + '):');
+					console.log(results);
+					self.exit(0);
+				},
+				function (err) {
+					self.exit(17, err);
+				}
+			);
+		}
 	},
 
 	/**
@@ -280,8 +290,9 @@ var mod = {
 if (IS_EXECUTING) {
 	mod.main(process.argv);
 } else {
-	module.exports = function (_runNpmCmd_, _fileToJSON_, _SpeedBoat_) {
+	module.exports = function (_runNpmCmd_, _provisionCmd_, _fileToJSON_, _SpeedBoat_) {
 		runNpmCmd = _runNpmCmd_ || runNpmCmd;
+		COMMANDS.provision = _provisionCmd_ || COMMANDS.provision || false;
 		fileToJSON = _fileToJSON_ || fileToJSON;
 		SpeedBoat = _SpeedBoat_ || SpeedBoat;
 		return mod;
