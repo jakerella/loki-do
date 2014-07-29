@@ -28,6 +28,7 @@ function logCmd(name, cmd) {
 module.exports = function (speedboat) {
 
 	var CHECKOUT_DIR = 'project-build',
+		GITHUB_KEY_LOC = '/root/.ssh/github.priv',
 		fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
@@ -72,6 +73,15 @@ module.exports = function (speedboat) {
 
 			async.series([
 				
+				// Set up the Github ssh key...
+				// Adds github.com to known hosts and adds the (already present)
+				// private ssh key to the (newly started) ssh-agent
+				speedboat.plot(droplet.id, [
+					'ssh-keyscan -t rsa,dsa github.com >> /root/.ssh/known_hosts;',
+					'eval "$(ssh-agent -s)";',
+					'ssh-add ' + GITHUB_KEY_LOC
+				].join(' ')),
+
 				// Make the temp directory if it doesn't exist,
 				// then clear out any previous temp project files
 				speedboat.plot(droplet.id, [
