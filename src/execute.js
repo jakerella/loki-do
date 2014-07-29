@@ -65,8 +65,6 @@ var mod = {
 			enable_logging: options.configObject.digital_ocean.enable_logging,
             scripts_path: options.configObject.digital_ocean.scripts_path
 		});
-
-		runNpm = runNpmCmd(speedboat);
 		
 		if (typeof COMMANDS[options.command] === 'function') {
 			cmd = COMMANDS[options.command](speedboat);
@@ -81,7 +79,8 @@ var mod = {
 				}
 			);
 		} else if (COMMANDS[options.command]) {
-			cwd = options.configObject[COMMANDS[options.command].cwd] || null;
+			runNpm = runNpmCmd(speedboat);
+			cwd = '/opt/' + options.configObject[COMMANDS[options.command].cwd];
 			return runNpm(options, cwd).then(
 				function (results) {
 					console.log('Command finished (npm ' + options.command + '):');

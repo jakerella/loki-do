@@ -27,8 +27,7 @@ function logCmd(name, cmd) {
  */
 module.exports = function (speedboat) {
 
-	var CHECKOUT_DIR = 'project-build',
-		GITHUB_KEY_LOC = '/root/.ssh/github.priv',
+	var GITHUB_KEY_LOC = '/root/.ssh/github.priv',
 		fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
@@ -76,21 +75,18 @@ module.exports = function (speedboat) {
 				// Make the temp directory if it doesn't exist,
 				// then clear out any previous temp project files
 				speedboat.plot(droplet.id, [
-					'mkdir ' + options.configObject.temp + ';',
-					CD_TEMP_DIR,
-					'rm -rf ' + CHECKOUT_DIR + '/'
+					'rm -rf /opt/' + options.configObject.temp
 				].join(' ')),
 
 				// Clone the project into the temp directory
 				speedboat.plot(droplet.id, [
-					CD_TEMP_DIR,
-					'ssh-agent bash -c \'ssh-add ' + GITHUB_KEY_LOC + '; git clone ' + options.vcsurl + ' ' + CHECKOUT_DIR + '\''
+					'cd /opt;',
+					'ssh-agent bash -c \'ssh-add ' + GITHUB_KEY_LOC + '; git clone ' + options.vcsurl + ' ' + options.configObject.temp + '\''
 				].join(' ')),
 
 				// run the proivision step of the scripts block (if it exists)
 				speedboat.plot(droplet.id, [
-					CD_TEMP_DIR,
-					'cd ' + CHECKOUT_DIR + '/;',
+					'cd /opt/' + options.configObject.temp + ';',
 					'npm run-script ' + options.command
 				].join(' '))
 
