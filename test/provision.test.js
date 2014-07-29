@@ -59,7 +59,7 @@ describe('Provision', function () {
 			speedboat.getDropletByName._resolveWith = droplet;
 			var cmd = provisionCmd(speedboat);
 			cmd(options).then(function () {
-				expect(speedboat.plot).to.have.been.called.exactly(3);
+				expect(speedboat.plot).to.have.been.called.exactly(4);
 				done();
 			}, function (err) {
 				done(err);
@@ -76,7 +76,7 @@ describe('Provision', function () {
 			speedboat.domainRecordGetAll._resolveWith = [];
 			var cmd = provisionCmd(speedboat);
 			cmd(options).then(function () {
-				expect(speedboat.plot).to.have.been.called.exactly(3);
+				expect(speedboat.plot).to.have.been.called.exactly(4);
 				done();
 			}, function (err) {
 				console.log(err);

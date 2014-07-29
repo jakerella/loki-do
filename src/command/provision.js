@@ -88,6 +88,12 @@ module.exports = function (speedboat) {
 				speedboat.plot(droplet.id, [
 					'cd /opt/' + options.configObject.temp + ';',
 					'npm run-script ' + options.command
+				].join(' ')),
+
+				// Install any dependencies
+				speedboat.plot(droplet.id, [
+					'cd /opt/' + options.configObject.temp + ';',
+					'npm install --unsafe-perm'
 				].join(' '))
 
 			], function (err, results) {
