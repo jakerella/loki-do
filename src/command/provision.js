@@ -3,7 +3,6 @@
 var Q = require('q'),
 	async = require('async'),
 	fetchDropletCmd = require('./fetch-droplet'),
-	updateDropletCmd = require('./update-droplet'),
 	createDropletCmd = require('./create-droplet'),
 	registerDomainCmd = require('./register-domain'),
 	purgeKnownHostCmd = require('./purge-known-host');
@@ -30,17 +29,12 @@ module.exports = function (speedboat) {
 
 	var CHECKOUT_DIR = 'project-build',
 		fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
-		updateDroplet = logCmd('updateDroplet', updateDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
 		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
 	return function provision (options) {
 		var CD_TEMP_DIR = 'cd ' + options.configObject.temp + ';';
-
-		function deployToExisting(droplet) {
-			return updateDroplet(droplet);
-		}
 
 		function deployToNew() {
 			return createDroplet(
@@ -69,8 +63,10 @@ module.exports = function (speedboat) {
 			if (!droplet) {
 				return deployToNew();
 			}
-			
-			return deployToExisting(droplet);
+
+			// in any case, we need the droplet in the next step,
+			// so we'll return the fetched droplet here...
+			return droplet;
 
 		}).then(function (droplet) {
 
