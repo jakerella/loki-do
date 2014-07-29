@@ -14,7 +14,7 @@ var fs = require('fs'),
 		// `require()` statement that returns a  function to call which 
 		// accepts an options block.
 		help: {},
-		proivisionCmd: require('./command/provision'),
+		proivision: require('./command/provision'),
 		stop: { cwd: 'destination' },
 		test: { cwd: 'temp' },
 		deploy: { cwd: 'destination' },
@@ -207,7 +207,7 @@ var mod = {
 	showUsage: function () {
 		console.log([
 			"",
-			"  USAGE: node execute.js {command} {project-path} {subdomain} {config} [--option=[value], ...]",
+			"  USAGE: node execute.js {command} {vcs-url} {subdomain} {config} [--option=[value], ...]",
 			"",
 			"  This script is used to run commands on a remote deployment server. The",
 			"  intent is to allow for a bridge between the CI server and the deployment",
@@ -228,6 +228,7 @@ var mod = {
 			"  }",
 			"",
 			"  Commands",
+			"    help          Show this usage information",
 			"    provision     Create a new server (if required) and run any provisioning",
 			"                  scripts. If the server already exists, nothing happens.",
 			"                  Note that this command requires the 'subdomain' option!",
