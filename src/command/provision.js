@@ -28,13 +28,15 @@ function logCmd(name, cmd) {
  */
 module.exports = function (speedboat) {
 
-	var fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
+	var CHECKOUT_DIR = 'project-build',
+		fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
 		updateDroplet = logCmd('updateDroplet', updateDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
 		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
 	return function provision (options) {
+		var CD_TEMP_DIR = 'cd ' + options.configObject.temp + ';';
 
 		function deployToExisting(droplet) {
 			return updateDroplet(droplet);
@@ -75,19 +77,19 @@ module.exports = function (speedboat) {
 			async.series([
 				
 				speedboat.plot(droplet.id, [
-					['cd ', options.configObject.temp, ';'].join(' '),
-					['rm -rf project-build/;']
+					CD_TEMP_DIR,
+					'rm -rf ' + CHECKOUT_DIR + '/'
 				].join(' ')),
 
 				speedboat.plot(droplet.id, [
-					['cd ', options.configObject.temp, ';'].join(' '),
-					['git clone ', options.vcsurl].join(' ')
+					CD_TEMP_DIR,
+					'git clone ' + options.vcsurl + ' ' + CHECKOUT_DIR
 				].join(' ')),
 
 				speedboat.plot(droplet.id, [
-					['cd ', options.configObject.temp, ';'].join(' '),
-					['cd project-build/;'].join(' '),
-					['npm ', options.command].join(' ')
+					CD_TEMP_DIR,
+					'cd ' + CHECKOUT_DIR + '/;',
+					'npm ' + options.command
 				].join(' '))
 
 			], function (err, results) {
