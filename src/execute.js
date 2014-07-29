@@ -14,7 +14,7 @@ var fs = require('fs'),
 		// `require()` statement that returns a  function to call which 
 		// accepts an options block.
 		help: {},
-		proivision: require('./command/provision'),
+		provision: require('./command/provision'),
 		stop: { cwd: 'destination' },
 		test: { cwd: 'temp' },
 		deploy: { cwd: 'destination' },
