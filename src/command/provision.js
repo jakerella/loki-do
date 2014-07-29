@@ -72,15 +72,6 @@ module.exports = function (speedboat) {
 		}).then(function (droplet) {
 
 			async.series([
-				
-				// Set up the Github ssh key...
-				// Adds github.com to known hosts and adds the (already present)
-				// private ssh key to the (newly started) ssh-agent
-				speedboat.plot(droplet.id, [
-					'ssh-keyscan -t rsa,dsa github.com >> /root/.ssh/known_hosts;',
-					'eval "$(ssh-agent -s)";',
-					'ssh-add ' + GITHUB_KEY_LOC
-				].join(' ')),
 
 				// Make the temp directory if it doesn't exist,
 				// then clear out any previous temp project files
@@ -93,7 +84,7 @@ module.exports = function (speedboat) {
 				// Clone the project into the temp directory
 				speedboat.plot(droplet.id, [
 					CD_TEMP_DIR,
-					'git clone ' + options.vcsurl + ' ' + CHECKOUT_DIR
+					'ssh-agent bash -c \'ssh-add ' + GITHUB_KEY_LOC + '; git clone ' + options.vcsurl + ' ' + CHECKOUT_DIR + '\''
 				].join(' ')),
 
 				// run the proivision step of the scripts block (if it exists)
