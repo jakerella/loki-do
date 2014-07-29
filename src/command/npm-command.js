@@ -30,8 +30,8 @@ module.exports = function (speedboat, _fetchDropletCmd_) {
 				async.series([
 					
 					speedboat.plot(droplet.id, [
-						['cd ', cwd, ';'].join(' '),
-						['npm ', options.command].join(' ')
+						'cd' + cwd + ';',
+						'npm run-script ' + options.command
 					].join(' '))
 
 				], function (err, results) {

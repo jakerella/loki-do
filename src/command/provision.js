@@ -91,7 +91,7 @@ module.exports = function (speedboat) {
 				speedboat.plot(droplet.id, [
 					CD_TEMP_DIR,
 					'cd ' + CHECKOUT_DIR + '/;',
-					'npm ' + options.command
+					'npm run-script ' + options.command
 				].join(' '))
 
 			], function (err, results) {
