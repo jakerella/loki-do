@@ -72,7 +72,7 @@ var mod = {
 			cmd = COMMANDS[options.command](speedboat);
 			return cmd(options).then(
 				function (results) {
-					console.log('Comman finished (' + options.command + '):');
+					console.log('Command finished (' + options.command + '):');
 					console.log(results);
 					self.exit(0);
 				},
