@@ -72,16 +72,21 @@ module.exports = function (speedboat) {
 
 			async.series([
 				
+				// Make the temp directory if it doesn't exist,
+				// then clear out any previous temp project files
 				speedboat.plot(droplet.id, [
+					'mkdir ' + options.configObject.temp + ';',
 					CD_TEMP_DIR,
 					'rm -rf ' + CHECKOUT_DIR + '/'
 				].join(' ')),
 
+				// Clone the project into the temp directory
 				speedboat.plot(droplet.id, [
 					CD_TEMP_DIR,
 					'git clone ' + options.vcsurl + ' ' + CHECKOUT_DIR
 				].join(' ')),
 
+				// run the proivision step of the scripts block (if it exists)
 				speedboat.plot(droplet.id, [
 					CD_TEMP_DIR,
 					'cd ' + CHECKOUT_DIR + '/;',
@@ -94,8 +99,6 @@ module.exports = function (speedboat) {
 				}
 				deferred.resolve(results);
 			});
-
-			deferred.resolve();
 
 		}).fail(function (err) {
 			deferred.reject(err);
