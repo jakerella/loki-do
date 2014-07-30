@@ -200,8 +200,7 @@ var mod = {
 
 	/**
 	 * Takes in the results array from a command and prints each entry as a
-	 * string. Replaces "\n" strings with actual new line characters. Also 
-	 * strips colorization characters
+	 * string. Replaces "\n" strings with actual new line characters.
 	 * 
 	 * @param  {Array<String>} results An array of the result strings from a command
 	 * @return {void}
@@ -212,7 +211,6 @@ var mod = {
 		console.log(
 			results
 				.join(EOL)
-				.replace(/\\u001b\[[0-9]+m/, '')
 				.split(/\\n/)
 				.join(EOL)
 		);
