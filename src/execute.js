@@ -306,7 +306,9 @@ var mod = {
 		}
 
 		if (IS_EXECUTING) {
-			console.error(errorOrMessage);
+			if (errorCode !== 0) {
+				console.error(errorOrMessage);
+			}
 			process.exit(errorCode);
 
 		} else if (errorCode !== 0) {
