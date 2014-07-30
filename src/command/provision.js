@@ -34,7 +34,6 @@ module.exports = function (speedboat) {
 		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
 	return function provision (options) {
-		var CD_TEMP_DIR = 'cd ' + options.configObject.temp + ';';
 
 		function deployToNew() {
 			return createDroplet(
