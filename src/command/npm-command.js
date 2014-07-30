@@ -10,20 +10,21 @@ var Q = require('q'),
  * @returns {Function}
  */
 module.exports = function (speedboat, _fetchDropletCmd_) {
-	var DEFAULT_DIR = '/opt/app',
-		fetchDropletCmd = _fetchDropletCmd_ || fetchDropletCmd;
+	var DEFAULT_DIR = '/opt/app';
+
+	fetchDropletCmd = _fetchDropletCmd_ || fetchDropletCmd;
 
 	return function runNpmCommand (options, cwd) {
 		var fetchDroplet = fetchDropletCmd(speedboat),
 			deferred = Q.defer(),
 			promise = deferred.promise,
 			dropletName = options.subdomain + '.' + options.configObject.hostname,
-			cmdOptions = '';
+			cmdOptions = [];
 
 		cwd = cwd || DEFAULT_DIR;
 
 		if (options.command === 'install') {
-			cmdOptions += ' --unsafe-perm';
+			cmdOptions.push('--unsafe-perm');
 		}
 
 		fetchDroplet(dropletName)
@@ -34,9 +35,17 @@ module.exports = function (speedboat, _fetchDropletCmd_) {
 				
 				async.series([
 					
+					// Make the cwd directory if it doesn't exist (prevents errors)
+					// then change into it and run custom command
 					speedboat.plot(droplet.id, [
+						'mkdir ' + cwd + ';',
 						'cd ' + cwd + ';',
-						'npm run-script ' + options.command + cmdOptions
+						[
+							'[ -f "package.json" ] && npm run-script',
+							options.command,
+							cmdOptions.join(' '),
+							'|| echo "No package.json file found"'
+						].join(' ')
 					].join(' '))
 
 				], function (err, results) {
