@@ -55,12 +55,15 @@ module.exports = function (speedboat) {
 
 		var deferred = Q.defer(),
 			promise = deferred.promise,
-			temp = '/opt/' + options.configObject.temp;
+			temp = '/opt/' + options.configObject.temp,
+			wasNew = false;
+			
 
 		var dropletName = [options.subdomain, '.', options.configObject.hostname].join('');
 		fetchDroplet(dropletName).then(function (droplet) {
-			
+
 			if (!droplet) {
+				wasNew = true;
 				return deployToNew();
 			}
 
@@ -69,9 +72,9 @@ module.exports = function (speedboat) {
 			return droplet;
 
 		}).then(function (droplet) {
-
-			async.series([
-
+			// we build the command list in pieces because we need to inject 
+			// commands depending on whether this is a new provision or update
+			var commands = [
 				// Clear out any previous temp project files
 				speedboat.plot(droplet.id, [
 					'rm -rf ' + temp
@@ -81,21 +84,31 @@ module.exports = function (speedboat) {
 				speedboat.plot(droplet.id, [
 					'cd /opt;',
 					'ssh-agent bash -c \'ssh-add ' + GITHUB_KEY_LOC + '; git clone ' + options.vcsurl + ' ' + options.configObject.temp + '\''
-				].join(' ')),
-
-				// run the proivision step of the scripts block (if it exists)
-				speedboat.plot(droplet.id, [
-					'cd ' + temp + ';',
-					'npm run-script ' + options.command
-				].join(' ')),
-
-				// Install any dependencies
-				speedboat.plot(droplet.id, [
-					'cd ' + temp + ';',
-					'npm install --unsafe-perm'
 				].join(' '))
+			];
 
-			], function (err, results) {
+			if (wasNew) {
+				// run the provision npm step ONLY on new droplets
+				commands.push(speedboat.plot(droplet.id, [
+					'cd ' + temp + ';',
+					'npm run-script provision'
+				].join(' ')));
+			}
+
+			// run the postprovision step every time
+			commands.push(speedboat.plot(droplet.id, [
+				'cd ' + temp + ';',
+				'npm run-script postprovision'
+			].join(' ')));
+
+			// The final step is depency installation
+			commands.push(speedboat.plot(droplet.id, [
+				'cd ' + temp + ';',
+				'npm install --unsafe-perm'
+			].join(' ')));
+
+			// process the command list
+			async.series(commands, function (err, results) {
 				if (err) {
 					return deferred.reject(err);
 				}

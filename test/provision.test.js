@@ -76,7 +76,7 @@ describe('Provision', function () {
 			speedboat.domainRecordGetAll._resolveWith = [];
 			var cmd = provisionCmd(speedboat);
 			cmd(options).then(function () {
-				expect(speedboat.plot).to.have.been.called.exactly(4);
+				expect(speedboat.plot).to.have.been.called.exactly(5);
 				done();
 			}, function (err) {
 				console.log(err);
