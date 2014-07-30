@@ -43,7 +43,7 @@ module.exports = function (speedboat) {
 			).then(function (droplet) {
 				return droplet;
 			}).then(function (droplet) {
-				return purgeKnownHost(droplet.id, '/home/buildagent/.ssh/known_hosts').then(function () {
+				return purgeKnownHost(droplet.id, '~/.ssh/known_hosts').then(function () {
 					return droplet;
 				});
 			}).then(function (droplet) {
