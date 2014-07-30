@@ -17,7 +17,7 @@ module.exports = function (speedboat) {
 			promise = deferred.promise;
 
 		syncBuild(droplet.id).then(function onSyncSuccess () {
-			deferred.resolve();
+			deferred.resolve(droplet);
 		}, function onSyncFailure (err) {
 			deferred.reject(err);
 		});

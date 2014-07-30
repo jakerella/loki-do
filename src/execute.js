@@ -8,20 +8,24 @@ var fs = require('fs'),
 	SpeedBoat = require('./speedboat'),
 	runNpmCmd = require('./command/npm-command'),
 	EOL = require('os').EOL,
+
 	COMMANDS = {
-		// `true` values simply do `npm [command]` and report the result
-		// any others should be `require()` statements that return a 
-		// function to call which accepts an options block.
-		help: true,
-		proivision: true,
-		stop: true,
-		test: true,
-		deploy: true,
-		prestart: true,
-		start: true
+		// any custom command (not simply npm [command]) should be a 
+		// `require()` statement that returns a  function to call which 
+		// accepts an options block.
+		help: {},
+		provision: require('./command/provision'),
+		stop: { cwd: 'destination' },
+		install: { cwd: 'temp' },
+		test: { cwd: 'temp' },
+		deploy: { cwd: 'destination' },
+		prestart: { cwd: 'destination' },
+		start: { cwd: 'destination' }
 	};
 
+// Constants
 var IS_EXECUTING = (require.main === module);
+
 
 var mod = {
 	MIN_OPTION_ERROR: 100,
@@ -36,7 +40,7 @@ var mod = {
 	 */
 	main: function (args) {
 
-		var runNpm,
+		var runNpm, cmd, cwd,
 			self = this,
 			options = mod.parseArgsAndOptions(args);
 
@@ -62,13 +66,25 @@ var mod = {
 			enable_logging: options.configObject.digital_ocean.enable_logging,
             scripts_path: options.configObject.digital_ocean.scripts_path
 		});
-
-		runNpm = runNpmCmd(speedboat);
 		
-		if (COMMANDS[options.command] === true) {
-			return runNpm(options).then(
+		if (typeof COMMANDS[options.command] === 'function') {
+			cmd = COMMANDS[options.command](speedboat);
+			return cmd(options).then(
 				function (results) {
-					console.log('Deployment finished:');
+					console.log('Command finished (' + options.command + '):');
+					console.log(results);
+					self.exit(0);
+				},
+				function (err) {
+					self.exit(17, err);
+				}
+			);
+		} else if (COMMANDS[options.command]) {
+			runNpm = runNpmCmd(speedboat);
+			cwd = '/opt/' + options.configObject[COMMANDS[options.command].cwd];
+			return runNpm(options, cwd).then(
+				function (results) {
+					console.log('Command finished (npm ' + options.command + '):');
 					console.log(results);
 					self.exit(0);
 				},
@@ -76,10 +92,8 @@ var mod = {
 					self.exit(13, err);
 				}
 			);
-		}
 
-		// TODO: what about `provision`?
-		
+		}
 	},
 
 	/**
@@ -87,13 +101,13 @@ var mod = {
 	 * (most likely from process.argv, but not necessarily)
 	 * 
 	 * @param  {Array} args An array of arguments, either simple strings, or in --name=value format
-	 * @return {Object}	A hash of the options, included required things like "command" and "path"
+	 * @return {Object}	A hash of the options, included required things like "command" and "vcsurl"
 	 */
 	parseArgsAndOptions: function (args) {
 		var i, l,
 			options = {
 				command: null,
-				path: null,
+				vcsurl: null,
 				subdomain: null,
 				config: null,
 				configObject: {}
@@ -107,7 +121,7 @@ var mod = {
 			options.command = args[2];
 		}
 		if (args[3]) {
-			options.path = args[3];
+			options.vcsurl = args[3];
 		}
 		if (args[4]) {
 			options.subdomain = args[4];
@@ -154,16 +168,8 @@ var mod = {
 			self.exit(105, new Error('That is not a valid command'));
 		}
 
-		if (!options.path) {
-			self.exit(110, new Error('No project path was specified'));
-		}
-
-		// Check the project path and package.json file
-		options.path = path.resolve(options.path);
-		pkgFile = path.join(options.path, 'package.json');
-
-		if (!fs.existsSync(pkgFile)) {
-			self.exit(115, new Error('There is no package.json file in that project path! (' + options.path + ')'));
+		if (!options.vcsurl) {
+			self.exit(110, new Error('No project version control was specified'));
 		}
 
 		if (!options.subdomain) {
@@ -201,7 +207,7 @@ var mod = {
 	showUsage: function () {
 		console.log([
 			"",
-			"  USAGE: node execute.js {command} {project-path} {subdomain} {config} [--option=[value], ...]",
+			"  USAGE: node execute.js {command} {vcs-url} {subdomain} {config} [--option=[value], ...]",
 			"",
 			"  This script is used to run commands on a remote deployment server. The",
 			"  intent is to allow for a bridge between the CI server and the deployment",
@@ -222,13 +228,21 @@ var mod = {
 			"  }",
 			"",
 			"  Commands",
+			"    help          Show this usage information",
 			"    provision     Create a new server (if required) and run any provisioning",
 			"                  scripts. If the server already exists, nothing happens.",
 			"                  Note that this command requires the 'subdomain' option!",
 			"                  configuration block (currently 'digitial_ocean')",
-			"    stop          Execute the 'stop' command of package.json 'scripts' block",
+			"                  NOTE: 'provision' will also checkout your project code",
+			"                        from source control, then run 'npm provision' if this",
+			"                        is a new server",
 			"    test          Execute the 'test' command of package.json 'scripts' block",
-			"    deploy        Execute the 'deploy' command of package.json 'scripts' block",
+			"    stop          Execute the 'stop' command of package.json 'scripts' block",
+			"    deploy        This commmand copies the project files from the temporary",
+			"                  location to the destination at which point the `deploy`",
+			"                  command in the package.json 'scripts' block is run",
+			"                  NOTE: The application should be stopped BEFORE this command",
+			"                        is run!",
 			"    prestart      Execute the 'prestart' command of package.json 'scripts' block",
 			"                  NOTE: you should probably NOT use this command. It will be",
 			"                        run automatically before any 'start' command!",
@@ -238,8 +252,9 @@ var mod = {
 			"",
 			"  Arguments (REQUIRED)",
 			"    command       What to run on the remote server (see 'Commands' above)",
-			"    project-path  Path to the project on the CI server (not remote server);",
-			"                  must have a package.json file at that location",
+			"    vcs-url       URL to the repository in the version control system",
+			"                  NOTE: You must have a package.json file in that root!",
+			"                        Also, currently `git` is the only supported system.",
 			"    subdomain     The subdomain to use for the remote server deployment",
 			"    config        Path to the configuration object file (JSON), should include",
             "                  cloud deployment config.",
@@ -287,8 +302,9 @@ var mod = {
 if (IS_EXECUTING) {
 	mod.main(process.argv);
 } else {
-	module.exports = function (_runNpmCmd_, _fileToJSON_, _SpeedBoat_) {
+	module.exports = function (_runNpmCmd_, _provisionCmd_, _fileToJSON_, _SpeedBoat_) {
 		runNpmCmd = _runNpmCmd_ || runNpmCmd;
+		COMMANDS.provision = _provisionCmd_ || COMMANDS.provision || false;
 		fileToJSON = _fileToJSON_ || fileToJSON;
 		SpeedBoat = _SpeedBoat_ || SpeedBoat;
 		return mod;
