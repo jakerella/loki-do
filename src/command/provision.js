@@ -34,7 +34,6 @@ module.exports = function (speedboat) {
 		purgeKnownHost = logCmd('purgeKnownHost', purgeKnownHostCmd(speedboat));
 
 	return function provision (options) {
-		var CD_TEMP_DIR = 'cd ' + options.configObject.temp + ';';
 
 		function deployToNew() {
 			return createDroplet(
@@ -55,7 +54,8 @@ module.exports = function (speedboat) {
 		}
 
 		var deferred = Q.defer(),
-			promise = deferred.promise;
+			promise = deferred.promise,
+			temp = '/opt/' + options.configObject.temp;
 
 		var dropletName = [options.subdomain, '.', options.configObject.hostname].join('');
 		fetchDroplet(dropletName).then(function (droplet) {
@@ -72,10 +72,9 @@ module.exports = function (speedboat) {
 
 			async.series([
 
-				// Make the temp directory if it doesn't exist,
-				// then clear out any previous temp project files
+				// Clear out any previous temp project files
 				speedboat.plot(droplet.id, [
-					'rm -rf /opt/' + options.configObject.temp
+					'rm -rf ' + temp
 				].join(' ')),
 
 				// Clone the project into the temp directory
@@ -86,13 +85,13 @@ module.exports = function (speedboat) {
 
 				// run the proivision step of the scripts block (if it exists)
 				speedboat.plot(droplet.id, [
-					'cd /opt/' + options.configObject.temp + ';',
+					'cd ' + temp + ';',
 					'npm run-script ' + options.command
 				].join(' ')),
 
 				// Install any dependencies
 				speedboat.plot(droplet.id, [
-					'cd /opt/' + options.configObject.temp + ';',
+					'cd ' + temp + ';',
 					'npm install --unsafe-perm'
 				].join(' '))
 
