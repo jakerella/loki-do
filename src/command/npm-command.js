@@ -10,8 +10,9 @@ var Q = require('q'),
  * @returns {Function}
  */
 module.exports = function (speedboat, _fetchDropletCmd_) {
-	var DEFAULT_DIR = '/opt/app',
-		fetchDropletCmd = _fetchDropletCmd_ || fetchDropletCmd;
+	var DEFAULT_DIR = '/opt/app';
+
+	fetchDropletCmd = _fetchDropletCmd_ || fetchDropletCmd;
 
 	return function runNpmCommand (options, cwd) {
 		var fetchDroplet = fetchDropletCmd(speedboat),
