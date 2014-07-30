@@ -70,12 +70,20 @@ describe('execute module', function() {
             },
 			log_file: '/mock/tc.log'
 		};
+
 		_consoleLog = console.log;
 		_consoleError = console.error;
 		console.log = chai.spy(function() {}); // we don't really want to log stuff
 		console.log._real = _consoleLog; // just in case we need it
 		console.error = chai.spy(function() {}); // we don't really want to log stuff
-		execute = executeFactory(runNpmCmdMock, provisionCmdMock, fileToJSONMock, speedBoatMock);
+		
+		execute = executeFactory({
+			runNpmCmd: runNpmCmdMock,
+			provisionCmd: provisionCmdMock,
+			deployCmd: deployCmdMock,
+			fileToJSON: fileToJSONMock,
+			SpeedBoat: speedBoatMock
+		});
 	});
 
 	afterEach(function() {

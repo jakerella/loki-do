@@ -302,11 +302,12 @@ var mod = {
 if (IS_EXECUTING) {
 	mod.main(process.argv);
 } else {
-	module.exports = function (_runNpmCmd_, _provisionCmd_, _fileToJSON_, _SpeedBoat_) {
-		runNpmCmd = _runNpmCmd_ || runNpmCmd;
-		COMMANDS.provision = _provisionCmd_ || COMMANDS.provision || false;
-		fileToJSON = _fileToJSON_ || fileToJSON;
-		SpeedBoat = _SpeedBoat_ || SpeedBoat;
+	module.exports = function (mocks) {
+		runNpmCmd = mocks.runNpmCmd || runNpmCmd;
+		COMMANDS.provision = mocks.provisionCmd || COMMANDS.provision || false;
+		COMMANDS.deploy = mocks.deployCmd || COMMANDS.deploy || false;
+		fileToJSON = mocks.fileToJSON || fileToJSON;
+		SpeedBoat = mocks.SpeedBoat || SpeedBoat;
 		return mod;
 	};
 }
