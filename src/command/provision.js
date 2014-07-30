@@ -71,8 +71,7 @@ module.exports = function (speedboat) {
 
 			async.series([
 
-				// Make the temp directory if it doesn't exist,
-				// then clear out any previous temp project files
+				// Clear out any previous temp project files
 				speedboat.plot(droplet.id, [
 					'rm -rf /opt/' + options.configObject.temp
 				].join(' ')),

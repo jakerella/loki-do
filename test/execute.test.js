@@ -20,6 +20,10 @@ describe('execute module', function() {
 	var provisionCmdMock = function () {
 		return provisionMock;
 	};
+	var deployMock;
+	var deployCmdMock = function () {
+		return deployMock;
+	};
 	var configMock = {};
 	var fileToJSONMock = function () {
 		return configMock;
@@ -42,6 +46,12 @@ describe('execute module', function() {
 			return promise;
 		});
 		provisionMock = chai.spy(function () {
+			var deferred = Q.defer(),
+				promise = deferred.promise;
+			deferred.resolve();
+			return promise;
+		});
+		deployMock = chai.spy(function () {
 			var deferred = Q.defer(),
 				promise = deferred.promise;
 			deferred.resolve();
@@ -208,7 +218,7 @@ describe('execute module', function() {
 			var result = execute.main([
 				'node',
 				'script/path.js',
-				'deploy',
+				'test',
 				'http://vcsurl.com',
 				'test',
 				'../test/config.json'
@@ -223,7 +233,7 @@ describe('execute module', function() {
 					expect(execute.showUsage).to.not.have.been.called();
 				},
 				function() {
-					throw new Error('Should not have received error on deploy');
+					throw new Error('Should not have received error on test');
 				}
 			);
 		});
@@ -247,7 +257,7 @@ describe('execute module', function() {
 					expect(execute.showUsage).to.not.have.been.called();
 				},
 				function() {
-					throw new Error('Should not have received error on deploy');
+					throw new Error('Should not have received error on provision');
 				}
 			);
 		});
