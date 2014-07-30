@@ -27,8 +27,7 @@ function logCmd(name, cmd) {
  */
 module.exports = function (speedboat) {
 
-	var HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE,
-		GITHUB_KEY_LOC = HOME + '/.ssh/github.priv',
+	var GITHUB_KEY_LOC = '/root/.ssh/github.priv',
 		fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
@@ -44,7 +43,7 @@ module.exports = function (speedboat) {
 			).then(function (droplet) {
 				return droplet;
 			}).then(function (droplet) {
-				return purgeKnownHost(droplet.id, HOME + '/.ssh/known_hosts').then(function () {
+				return purgeKnownHost(droplet.id, '/root/.ssh/known_hosts').then(function () {
 					return droplet;
 				});
 			}).then(function (droplet) {
