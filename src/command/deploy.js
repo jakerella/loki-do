@@ -36,9 +36,10 @@ module.exports = function (speedboat) {
 				// to check that since we don't know what is involved in 
 				// that process, instead, just march forward...
 				
-				// Clear out any previous project files
+				// Clear out any previous project files and recreate dir
 				speedboat.plot(droplet.id, [
-					'rm -rf /opt/' + options.configObject.destination
+					'rm -rf /opt/' + options.configObject.destination,
+					'mkdir /opt/' + options.configObject.destination
 				].join(' ')),
 
 				// Copy files from temp location to destination
