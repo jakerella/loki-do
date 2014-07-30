@@ -1,3 +1,7 @@
+/**
+ * @obsolete
+ */
+
 var _ = require('underscore'),
     nconf = require('nconf'),
     winston = require('winston'),

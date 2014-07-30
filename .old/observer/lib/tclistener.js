@@ -1,3 +1,7 @@
+/**
+ * @obsolete
+ */
+
 var messenger = require('messenger'),
     fs = require('fs'),
     path = require('path'),
