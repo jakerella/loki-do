@@ -39,13 +39,12 @@ module.exports = function (speedboat) {
 				
 				// Clear out any previous project files and recreate dir
 				speedboat.plot(droplet.id, [
-					'rm -rf ' + destination + '; ',
-					'mkdir ' + destination
+					'rm -rf ' + destination
 				].join(' ')),
 
 				// Copy files from temp location to destination
 				speedboat.plot(droplet.id, [
-					'cp -rf /opt/' + options.configObject.temp + ' ' + destination
+					'cp -ra /opt/' + options.configObject.temp + '/. ' + destination
 				].join(' ')),
 
 				// run the deploy step of the scripts block (if it exists)
