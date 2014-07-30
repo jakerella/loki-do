@@ -45,7 +45,7 @@ module.exports = function (speedboat, _fetchDropletCmd_) {
 							options.command,
 							cmdOptions.join(' '),
 							'|| echo "No package.json file found"'
-						].join(' ');
+						].join(' ')
 					].join(' '))
 
 				], function (err, results) {
