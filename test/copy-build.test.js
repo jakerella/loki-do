@@ -16,10 +16,25 @@ var droplet = {};
 var RETRY_INTERVAL = 200;
 
 describe('CopyBulid', function () {
+	var _consoleLog, _consoleError
+
 	beforeEach(function (done) {
 		speedboat = mockSpeedboat();
 		droplet.id = Date.now();
+
+		_consoleLog = console.log;
+		_consoleError = console.error;
+		console.log = chai.spy(function() {}); // we don't really want to log stuff
+		console.log._real = _consoleLog; // just in case we need it
+		console.error = chai.spy(function() {}); // we don't really want to log stuff
+
 		done();
+	});
+
+	afterEach(function() {
+		// let's put the console methods back
+		console.log = _consoleLog;
+		console.error = _consoleError;
 	});
 
 	it('returns a command function', function (done) {

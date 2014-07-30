@@ -12,12 +12,14 @@ var chai = require('chai'),
 chai.use(spies);
 
 describe('execute module', function() {
-	// deploy CMD mock
-	var deployMock;
-	var deployCmdMock = function () {
-		return deployMock;
+	var runNpmMock;
+	var runNpmCmdMock = function () {
+		return runNpmMock;
 	};
-	// config mock
+	var provisionMock;
+	var provisionCmdMock = function () {
+		return provisionMock;
+	};
 	var configMock = {};
 	var fileToJSONMock = function () {
 		return configMock;
@@ -33,12 +35,18 @@ describe('execute module', function() {
 		_consoleError;
 
 	beforeEach(function() {
-		deployMock = function () {
+		runNpmMock = chai.spy(function () {
 			var deferred = Q.defer(),
 				promise = deferred.promise;
 			deferred.resolve();
 			return promise;
-		};
+		});
+		provisionMock = chai.spy(function () {
+			var deferred = Q.defer(),
+				promise = deferred.promise;
+			deferred.resolve();
+			return promise;
+		});
 		configMock = {
 			hostname: 'a2mock.com',
             digital_ocean: {
@@ -57,7 +65,7 @@ describe('execute module', function() {
 		console.log = chai.spy(function() {}); // we don't really want to log stuff
 		console.log._real = _consoleLog; // just in case we need it
 		console.error = chai.spy(function() {}); // we don't really want to log stuff
-		execute = executeFactory(deployCmdMock, fileToJSONMock, speedBoatMock);
+		execute = executeFactory(runNpmCmdMock, provisionCmdMock, fileToJSONMock, speedBoatMock);
 	});
 
 	afterEach(function() {
@@ -92,8 +100,11 @@ describe('execute module', function() {
 			var result = execute.parseArgsAndOptions();
 
 			expect(result.command).to.be.null;
-			expect(result.path).to.be.null;
-
+			expect(result.vcsurl).to.be.null;
+			expect(result.subdomain).to.be.null;
+			expect(result.config).to.be.null;
+			expect(result.configObject).to.be.a.object;
+			expect(Object.keys(result.configObject).length).to.equal(0);
 		});
 
 		it('should parse command and path out of correct entries', function() {
@@ -101,11 +112,11 @@ describe('execute module', function() {
 				'node',
 				'script/path.js',
 				'foo',
-				'/path/to/project'
+				'http://vcsurl.com'
 			]);
 
 			expect(result.command).to.equal('foo');
-			expect(result.path).to.equal('/path/to/project');
+			expect(result.vcsurl).to.equal('http://vcsurl.com');
 
 		});
 
@@ -116,13 +127,17 @@ describe('execute module', function() {
 				'--foo3=bar3',
 				'--foo4=bar4',
 				'--foo5=bar5',
-				'--foo6=bar6'
+				'--foo6=bar6',
+				'--foo7=bar7',
+				'--foo8=bar8'
 			]);
 
 			expect(result.command).to.equal('--foo3=bar3');
-			expect(result.path).to.equal('--foo4=bar4');
-			expect(result.foo5).to.equal('bar5');
-			expect(result.foo6).to.equal('bar6');
+			expect(result.vcsurl).to.equal('--foo4=bar4');
+			expect(result.subdomain).to.equal('--foo5=bar5');
+			expect(result.config).to.equal('--foo6=bar6');
+			expect(result.foo7).to.equal('bar7');
+			expect(result.foo8).to.equal('bar8');
 
 		});
 
@@ -189,20 +204,46 @@ describe('execute module', function() {
 			expect(execute.showUsage).to.have.been.called(1);
 		});
 
-		it('should show log when executing command', function() {
+		it('should run npm command and log when executing command', function() {
 			var result = execute.main([
 				'node',
 				'script/path.js',
 				'deploy',
-				'.',
-				'--config=../test/config.json'
+				'http://vcsurl.com',
+				'test',
+				'../test/config.json'
 			]);
 
 			expect(result).to.be.a.object;
 			expect(result.then).to.be.a.function;
 			return result.then(
 				function() {
-					expect(console.log).to.have.been.called(4);
+					expect(runNpmMock).to.have.been.called(1);
+					expect(console.log).to.have.been.called(3);
+					expect(execute.showUsage).to.not.have.been.called();
+				},
+				function() {
+					throw new Error('Should not have received error on deploy');
+				}
+			);
+		});
+
+		it('should call custom command and log when executed', function() {
+			var result = execute.main([
+				'node',
+				'script/path.js',
+				'provision',
+				'http://vcsurl.com',
+				'test',
+				'../test/config.json'
+			]);
+
+			expect(result).to.be.a.object;
+			expect(result.then).to.be.a.function;
+			return result.then(
+				function() {
+					expect(provisionMock).to.have.been.called(1);
+					expect(console.log).to.have.been.called(3);
 					expect(execute.showUsage).to.not.have.been.called();
 				},
 				function() {
