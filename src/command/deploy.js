@@ -16,7 +16,8 @@ module.exports = function (speedboat) {
 	return function provision (options) {
 
 		var deferred = Q.defer(),
-			promise = deferred.promise;
+			promise = deferred.promise,
+			destination = '/opt/' + options.configObject.destination;
 
 		var dropletName = [options.subdomain, '.', options.configObject.hostname].join('');
 		fetchDroplet(dropletName).then(function (droplet) {
@@ -38,18 +39,18 @@ module.exports = function (speedboat) {
 				
 				// Clear out any previous project files and recreate dir
 				speedboat.plot(droplet.id, [
-					'rm -rf /opt/' + options.configObject.destination,
-					'mkdir /opt/' + options.configObject.destination
+					'rm -rf ' + destination + '; ',
+					'mkdir ' + destination
 				].join(' ')),
 
 				// Copy files from temp location to destination
 				speedboat.plot(droplet.id, [
-					'cp -rf /opt/' + options.configObject.temp + ' ' + options.configObject.destination
+					'cp -rf /opt/' + options.configObject.temp + ' ' + destination
 				].join(' ')),
 
 				// run the deploy step of the scripts block (if it exists)
 				speedboat.plot(droplet.id, [
-					'cd /opt/' + options.configObject.destination + ';',
+					'cd ' + destination + '; ',
 					'npm run-script deploy'
 				].join(' '))
 
