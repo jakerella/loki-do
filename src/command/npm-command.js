@@ -40,7 +40,12 @@ module.exports = function (speedboat, _fetchDropletCmd_) {
 					speedboat.plot(droplet.id, [
 						'mkdir ' + cwd + ';',
 						'cd ' + cwd + ';',
-						'[ -f "package.json" ] && npm run-script ' + options.command + ' ' + cmdOptions.join(' ')
+						[
+							'[ -f "package.json" ] && npm run-script',
+							options.command,
+							cmdOptions.join(' '),
+							'|| echo "No package.json file found"'
+						].join(' ');
 					].join(' '))
 
 				], function (err, results) {
