@@ -71,7 +71,7 @@ var mod = {
 			return cmd(options).then(
 				function (results) {
 					console.log('Command finished (' + options.command + '):');
-					console.log(results);
+					self.displayCommandResults(results);
 					self.exit(0);
 				},
 				function (err) {
@@ -84,7 +84,7 @@ var mod = {
 			return runNpm(options, cwd).then(
 				function (results) {
 					console.log('Command finished (npm ' + options.command + '):');
-					console.log(results);
+					self.displayCommandResults(results);
 					self.exit(0);
 				},
 				function (err) {
@@ -196,6 +196,26 @@ var mod = {
 		}
 
 		return options;
+	},
+
+	/**
+	 * Takes in the results array from a command and prints each entry as a
+	 * string. Replaces "\n" strings with actual new line characters. Also 
+	 * strips colorization characters
+	 * 
+	 * @param  {Array<String>} results An array of the result strings from a command
+	 * @return {void}
+	 */
+	displayCommandResults: function(results) {
+		results = (Array.isArray(results) && results) || [ results ];
+
+		console.log(
+			results
+				.join(EOL)
+				.replace(/\\u001b\[[0-9]+m/, '')
+				.split(/\\n/)
+				.join(EOL)
+		);
 	},
 
 	/**
