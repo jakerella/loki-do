@@ -27,7 +27,7 @@ function logCmd(name, cmd) {
  */
 module.exports = function (speedboat) {
 
-	var GITHUB_KEY_LOC = '/root/.ssh/github.priv',
+	var GITHUB_KEY_LOC = '~/.ssh/github.priv',
 		fetchDroplet = logCmd('fetchDroplet', fetchDropletCmd(speedboat)),
 		createDroplet = logCmd('createDroplet', createDropletCmd(speedboat)),
 		registerDomain = logCmd('registerDomain', registerDomainCmd(speedboat)),
