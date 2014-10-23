@@ -1,25 +1,25 @@
 {
-  "name": "teamcity-scripts",
+  "name": "loki",
   "version": "0.1.0",
-  "description": "Scripts to facilitate continuous integration and deployment",
+  "description": "Scripts to facilitate continuous integration and deployment with Digital Ocean droplets",
   "main": "src/execute.js",
   "scripts": {
     "test": "make test"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/appendto/teamcity-scripts.git"
+    "url": "git://github.com/jakerella/loki.git"
   },
-  "author": "Tim Ambler",
+  "author": "Jordan Kasper",
   "contributors": [
-    "Nick Cloud",
-    "Jordan Kasper"
+    "Nicholas Cloud",
+    "Tim Ambler"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/appendto/teamcity-scripts/issues"
+    "url": "https://github.com/jakerella/loki/issues"
   },
-  "homepage": "https://github.com/appendto/teamcity-scripts",
+  "homepage": "https://github.com/jakerella/loki",
   "dependencies": {
     "async": "^0.9.0",
     "glob": "^4.0.4",
