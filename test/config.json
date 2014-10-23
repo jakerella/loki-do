@@ -9,7 +9,7 @@
         "ssh_key_id": "abcdef",
         "public_ssh_key": "/path/to/do_key.pub",
         "private_ssh_key": "/path/to/do_key",
-	    "enable_logging": true,
+        "enable_logging": true,
         "scripts_path": "/some/path"
     },
     "log_file": "do_log.log"

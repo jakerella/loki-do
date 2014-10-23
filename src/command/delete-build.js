@@ -1,6 +1,6 @@
 'use strict';
 var Q = require('q'),
-	async = require('async');
+    async = require('async');
 
 /**
  *
@@ -9,19 +9,19 @@ var Q = require('q'),
  */
 module.exports = function (speedboat) {
 
-	var DELETE_CMD = 'rm -rf /opt/app;';
+    var DELETE_CMD = 'rm -rf /opt/app;';
 
-	return function deleteBuild (boxId) {
-		var deferred = Q.defer(),
-			promise = deferred.promise;
+    return function deleteBuild (boxId) {
+        var deferred = Q.defer(),
+            promise = deferred.promise;
 
-		speedboat.plot(boxId, DELETE_CMD, function (err/*, result*/) {
-			if (err) {
-				return deferred.reject(err);
-			}
-			deferred.resolve();
-		});
+        speedboat.plot(boxId, DELETE_CMD, function (err/*, result*/) {
+            if (err) {
+                return deferred.reject(err);
+            }
+            deferred.resolve();
+        });
 
-		return promise;
-	};
+        return promise;
+    };
 };

@@ -1,6 +1,6 @@
 'use strict';
 var Q = require('q'),
-	async = require('async');
+    async = require('async');
 
 /**
  *
@@ -9,17 +9,17 @@ var Q = require('q'),
  */
 module.exports = function (speedboat) {
 
-	return function fetchDroplet (hostname) {
-		var deferred = Q.defer(),
-			promise = deferred.promise;
+    return function fetchDroplet (hostname) {
+        var deferred = Q.defer(),
+            promise = deferred.promise;
 
-		speedboat.getDropletByName(hostname, function(err, droplet) {
-			if (err) {
-				return deferred.reject(err);
-			}
-			deferred.resolve(droplet);
-		});
+        speedboat.getDropletByName(hostname, function(err, droplet) {
+            if (err) {
+                return deferred.reject(err);
+            }
+            deferred.resolve(droplet);
+        });
 
-		return promise;
-	};
+        return promise;
+    };
 };
