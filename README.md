@@ -1,4 +1,4 @@
-# Loki
+# Loki-DO
 
 A simple tool for facilitating Continuous Integration and Deployment to Digital 
 Ocean droplets.
