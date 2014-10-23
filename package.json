@@ -1,6 +1,6 @@
 {
   "name": "loki",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scripts to facilitate continuous integration and deployment with Digital Ocean droplets",
   "main": "src/execute.js",
   "scripts": {
