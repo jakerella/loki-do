@@ -30,6 +30,7 @@ describe('Provision', function () {
 
     beforeEach(function (done) {
         speedboat = mockSpeedboat();
+        speedboat._options.domain_id = 123456;
         droplet.id = Date.now();
         droplet.ip_address = '111.111.111.111';
 

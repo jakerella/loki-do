@@ -63,7 +63,8 @@ var mod = {
             public_ssh_key: options.configObject.digital_ocean.public_ssh_key,
             private_ssh_key: options.configObject.digital_ocean.private_ssh_key,
             enable_logging: options.configObject.digital_ocean.enable_logging,
-            scripts_path: options.configObject.digital_ocean.scripts_path
+            scripts_path: options.configObject.digital_ocean.scripts_path,
+            domain_id: options.configObject.digital_ocean.domain_id
         });
         
         if (typeof COMMANDS[options.command] === 'function') {

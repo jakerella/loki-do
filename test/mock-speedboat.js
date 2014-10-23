@@ -24,6 +24,7 @@ function mockDecorator (speedboatMock) {
      * existing mock
      */
     var mock = (speedboatMock || {});
+    mock._options = (mock._options || {});
 
     addMethodSpy(mock, 'copyFolder', false);
 

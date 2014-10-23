@@ -14,15 +14,12 @@ module.exports = function (speedboat) {
         var deferred = Q.defer(),
             promise = deferred.promise;
 
-        // TODO: is this an account id?
-        var APPENDTO_ID = '328048';
-
         function getDropletById (cb) {
             speedboat.dropletGet(boxId, cb);
         }
 
         function purgeExistingDNSRecord (droplet, cb) {
-            speedboat.domainRecordGetAll(APPENDTO_ID, function (err, results) {
+            speedboat.domainRecordGetAll(speedboat._options.domain_id, function (err, results) {
                 if (err) {
                     return cb(err);
                 }
@@ -35,7 +32,7 @@ module.exports = function (speedboat) {
                     return cb(null, droplet);
                 }
 
-                speedboat.domainRecordDestroy(APPENDTO_ID, record.id, function (err) {
+                speedboat.domainRecordDestroy(speedboat._options.domain_id, record.id, function (err) {
                     if (err) {
                         return cb(err);
                     }
@@ -45,21 +42,27 @@ module.exports = function (speedboat) {
         }
 
         function createDNSRecord (droplet, cb) {
-            speedboat.domainRecordNew(APPENDTO_ID, 'A', droplet.ip_address, {
+            speedboat.domainRecordNew(speedboat._options.domain_id, 'A', droplet.ip_address, {
                 'name': subdomain
             }, cb);
         }
 
-        async.waterfall([
-            getDropletById,
-            purgeExistingDNSRecord,
-            createDNSRecord
-        ], function (err) {
-            if (err) {
-                return deferred.reject(err);
-            }
-            deferred.resolve();
-        });
+        if (!speedboat._options.domain_id) {
+            
+            deferred.reject(new Error('Please specify a domain record ID to use as a base'));
+
+        } else {
+            async.waterfall([
+                getDropletById,
+                purgeExistingDNSRecord,
+                createDNSRecord
+            ], function (err) {
+                if (err) {
+                    return deferred.reject(err);
+                }
+                deferred.resolve();
+            });
+        }
 
         return promise;
     };

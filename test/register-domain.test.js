@@ -21,6 +21,7 @@ describe('RegisterDomain', function () {
         droplet.id = Date.now();
         droplet.ip_address = '111.111.111.111';
         domainRecords = [{data: '111.111.111.111'}, {data: '222.222.222.222'}, {data: '333.333.333.333'}];
+        speedboat._options.domain_id = 123456;
         speedboat.dropletGet._resolveWith = droplet;
         speedboat.domainRecordGetAll._resolveWith = domainRecords;
         done();
@@ -30,6 +31,27 @@ describe('RegisterDomain', function () {
         var actual = registerDomainCmd(speedboat);
         expect(actual).to.be.a('function');
         done();
+    });
+
+    it('should fail when no domain ID is supplied', function (done) {
+        var noDomainSpeedboat = mockSpeedboat();
+        noDomainSpeedboat._options.domain_id = null;
+        
+        var expected = new Error('Please specify a domain record ID to use as a base');
+        var cmd = registerDomainCmd(noDomainSpeedboat);
+        
+        cmd(1, 'subdomain').then(function () {
+            done('This command should fail with no domain present');
+        }, function (actual) {
+            expect(noDomainSpeedboat.dropletGet).to.have.been.called.exactly(0);
+            expect(noDomainSpeedboat.domainRecordGetAll).to.have.been.called.exactly(0);
+            expect(noDomainSpeedboat.domainRecordDestroy).to.have.been.called.exactly(0);
+            expect(noDomainSpeedboat.domainRecordNew).to.have.been.called.exactly(0);
+
+            expect(actual).to.deep.equal(expected);
+            expect(1).to.equal(1);
+            done();
+        });
     });
 
     describe('when the droplet cannot be found', function () {
