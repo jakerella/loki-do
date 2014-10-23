@@ -24,7 +24,7 @@
     "async": "^0.9.0",
     "glob": "^4.0.4",
     "lodash": "^2.4.1",
-    "motorboat": "https://github.com/a2labs/motorboat/archive/master.tar.gz",
+    "motorboat": "https://github.com/jakerella/motorboat/archive/master.tar.gz",
     "q": "^1.0.1"
   },
   "devDependencies": {
